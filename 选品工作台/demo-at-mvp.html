@@ -20,22 +20,47 @@
         </div>
         <nav class="sidenav" id="sidenav" aria-label="主导航"></nav>
         <footer class="sidebar-footer">
-          <div class="role-switch" role="group" aria-label="演示角色">
-            <button type="button" data-role="ops" class="is-active">品类运营</button>
-            <button type="button" data-role="lead">品类负责人</button>
-          </div>
           <div class="sync-status">
             <span class="sync-dot"></span>
             <div class="sync-status__copy">
               <strong>演示数据</strong>
-              <span>批次 2026-W30 · AT 轨</span>
+              <span id="batch-label">批次 2026-W30 · AT 轨</span>
             </div>
           </div>
-          <div class="sidebar-user">
-            <div class="sidebar-user__avatar" id="user-avatar">运</div>
-            <div class="sidebar-user__meta">
-              <strong id="user-name">品类运营</strong>
-              <span>演示账号 · AT</span>
+          <div class="account-menu" id="account-menu">
+            <button type="button" class="sidebar-user sidebar-user--btn" id="account-toggle" aria-expanded="false" aria-haspopup="true">
+              <div class="sidebar-user__avatar" id="user-avatar">运</div>
+              <div class="sidebar-user__meta">
+                <strong id="user-name">品类运营</strong>
+                <span id="user-context">AT · 全部市场</span>
+              </div>
+              <span class="account-caret" aria-hidden="true">▴</span>
+            </button>
+            <div class="account-popover" id="account-popover" hidden>
+              <div class="account-popover__section">
+                <div class="account-popover__label">身份</div>
+                <div class="account-role-list" role="group">
+                  <button type="button" data-role="ops" class="is-active">品类运营</button>
+                  <button type="button" data-role="lead">品类负责人</button>
+                  <button type="button" data-role="admin">管理员</button>
+                </div>
+              </div>
+              <div class="account-popover__section" id="account-cat-section">
+                <div class="account-popover__label">品类 <span class="muted">(仅管理员)</span></div>
+                <select id="account-category" disabled>
+                  <option value="AT">AT 礼服</option>
+                  <option value="BD">BD 伴娘 · 接入中</option>
+                </select>
+              </div>
+              <div class="account-popover__section">
+                <div class="account-popover__label">市场</div>
+                <select id="account-market">
+                  <option value="all">全部市场</option>
+                  <option value="US">US</option>
+                  <option value="UK">UK</option>
+                  <option value="AU">AU</option>
+                </select>
+              </div>
             </div>
           </div>
         </footer>
@@ -62,47 +87,57 @@
       (function () {
         const ROUTES = [
           {
+            id: "dashboard",
+            label: "总览摘要",
+            icon: "◈",
+            title: "总览摘要",
+            desc: "北极星增量 → 护栏（覆盖/成稿/AI）→ 平台与落地漏斗 → 五信号健康度与场景分布。",
+          },
+          {
             id: "monitor",
             label: "监控报告",
             icon: "▣",
             title: "监控报告",
-            desc: "流行趋势、竞品网站、广告投流与站内爆款。侧栏二级目录切换频道。",
+            desc: "流行趋势、竞品网站、广告、邮件、社媒与站内爆款。侧栏二级目录切换频道。",
           },
           {
             id: "pool",
             label: "选品管理",
             icon: "◎",
             title: "选品管理",
-            desc: "候选机会池。每个机会有编码；可先 AI 分析，再创建 / 编辑方案。",
-          },
-          {
-            id: "ai",
-            label: "AI选款分析",
-            icon: "✦",
-            title: "AI选款分析",
-            desc: "先选机会再开始分析。按流行趋势、竞品热度、广告、内部销量、社媒舆情多维打分后给出结论。",
+            desc: "纯新款 / 负向改款 / 正向改款。可排序筛选后创建方案；AI 分析在方案右栏。",
           },
           {
             id: "scheme",
             label: "方案编辑",
             icon: "✎",
             title: "方案编辑",
-            desc: "编辑并完善选品方案字段。",
+            desc: "左侧完善方案字段，右侧为 AI 选款分析（原独立页并入）。",
           },
           {
             id: "approval",
             label: "审批与选款",
             icon: "✓",
             title: "审批与选款",
-            desc: "品类负责人终审。可查看完整方案并批注；通过后写入选款。",
+            desc: "负责人终审与批注；下方历史方案可看审批进度、驳回建议与批注、goods_id 关联。",
+          },
+          {
+            id: "mapping",
+            label: "属性映射表",
+            icon: "▦",
+            title: "属性映射表",
+            desc: "内部标准属性 ⇄ 竞品站叫法。热卖属性榜与相似款匹配依赖本表。",
+            nav: "footer",
           },
         ];
 
         const MONITOR_CHANNELS = [
-          { id: "trends", label: "流行趋势", desc: "元素 / 面料流行信号与多源证据" },
-          { id: "sites", label: "竞品网站", desc: "竞品动态浏览 + 周度分析报告" },
+          { id: "trends", label: "流行趋势", desc: "元素 / 面料流行信号与多源证据（不计入五源健康度）" },
+          { id: "sites", label: "竞品网站", desc: "竞品动态浏览 + 周度分析报告（雷达 AT 轨）" },
           { id: "ads", label: "广告投流", desc: "播放、投放天数与互动卡片" },
-          { id: "internal", label: "站内爆款", desc: "自有商品销售热榜 · 评论驱动正负向改款" },
+          { id: "email", label: "竞品邮件主推", desc: "Newsletter Hero / 次推位拆解" },
+          { id: "social", label: "社媒舆情", desc: "人工录入好评 / 翻车帖，挂到机会或方案" },
+          { id: "internal", label: "站内爆款", desc: "自有商品销售热榜 · AZ 相似款与正负向线索" },
         ];
 
         const SCENARIO_META = {
@@ -131,44 +166,183 @@
           {
             line: "AT",
             sites: [
-              { name: "Oh Polly", url: "https://www.ohpolly.com/collections/dresses" },
-              { name: "House of CB", url: "https://app.houseofcb.com/category?category_id=1" },
-              { name: "Club L London", url: "https://clubllondon.com/collections/all-dresses" },
-              { name: "Babyboo", url: "https://www.babyboofashion.com/collections/dresses" },
+              { name: "Oh Polly", url: "https://www.ohpolly.com/collections/dresses", markets: ["UK", "US", "AU"], enabled: true },
+              { name: "House of CB", url: "https://app.houseofcb.com/category?category_id=1", markets: ["UK", "US"], enabled: true },
+              { name: "Club L London", url: "https://clubllondon.com/collections/all-dresses", markets: ["UK", "US", "AU"], enabled: true },
+              { name: "Babyboo", url: "https://www.babyboofashion.com/collections/dresses", markets: ["AU", "US"], enabled: true },
             ],
           },
           {
             line: "BD",
             sites: [
-              { name: "Birdy Grey", url: "https://www.birdygrey.com/collections/bridesmaid-dresses" },
-              { name: "Six Stories", url: "https://www.sixstories.com/collections/bridesmaid-dresses" },
-              { name: "Hello Molly BD", url: "https://www.hellomolly.com/collections/wedding-edit/bridesmaid" },
-              { name: "Club L BD", url: "https://clubllondon.com/collections/bridesmaids" },
-              { name: "Babyboo BD", url: "https://www.babyboofashion.com/collections/bridesmaid" },
+              { name: "Birdy Grey", url: "https://www.birdygrey.com/collections/bridesmaid-dresses", markets: ["US", "UK", "AU"], enabled: false },
+              { name: "Six Stories", url: "https://www.sixstories.com/collections/bridesmaid-dresses", markets: ["UK"], enabled: false },
+            ],
+          },
+        ];
+
+        const ATTR_HOT_RANK = [
+          { dim: "领型", attr: "方领", hotShare: "28%", allShare: "11%", conc: 2.6, boost: "AD 在投 18 天 · EDM Hero", trend: "↑" },
+          { dim: "细节", attr: "后背绑带", hotShare: "22%", allShare: "8%", conc: 2.8, boost: "AD 在投 · EDM 次推", trend: "↑" },
+          { dim: "领型", attr: "一字肩", hotShare: "19%", allShare: "10%", conc: 1.9, boost: "Club L 热销 #2 载体", trend: "→" },
+          { dim: "裙型", attr: "高开衩", hotShare: "17%", allShare: "11%", conc: 1.5, boost: "邮件次推", trend: "↑" },
+          { dim: "袖型", attr: "泡泡袖", hotShare: "15%", allShare: "7%", conc: 2.2, boost: "AD 21 天", trend: "↑" },
+        ];
+
+        const EMAIL_ROWS = [
+          { brand: "Babyboo", subject: "New Season Satin Edit", market: "AU", sent: "07-26", hero: "Cowl Neck Satin Maxi", slot: "Hero", opp: "opp-01" },
+          { brand: "Club L London", subject: "Weekend Edit", market: "UK", sent: "07-25", hero: "Corset Bodice Split Gown", slot: "Hero", opp: "opp-02" },
+          { brand: "Oh Polly", subject: "New In", market: "UK", sent: "07-25", hero: "Draped Asymmetric Mini", slot: "Hero", opp: null },
+          { brand: "Babyboo", subject: "Best Sellers", market: "US", sent: "07-22", hero: "Off-Shoulder Mermaid", slot: "次推位", opp: "opp-03" },
+        ];
+
+        const SOCIAL_ROWS = [
+          { platform: "Instagram", url: "ins.com/p/demo1", tone: "好评", note: "方领缎面礼服从腰线到开衩都被夸", linked: "opp-01", viral: false },
+          { platform: "Instagram", url: "ins.com/p/demo2", tone: "翻车", note: "AZ6520 胸垫移位翻车帖", linked: "NEG-AZ6520", viral: true },
+          { platform: "TikTok", url: "tiktok.com/@demo3", tone: "好评", note: "挂脖领舞会挑战贴纸", linked: "opp-04", viral: false },
+          { platform: "Instagram", url: "ins.com/p/demo4", tone: "好评", note: "后背绑带细节被收藏", linked: "POS-AZ8802", viral: false },
+          { platform: "Xiaohongshu", url: "xhs/demo5", tone: "中性", note: "鱼尾开衩上身对比", linked: null, viral: false },
+          { platform: "Instagram", url: "ins.com/p/demo6", tone: "翻车", note: "蕾丝刮丝客诉截图", linked: "NEG-AZ7101", viral: false },
+        ];
+
+        const SYNC_RECEIPTS = [
+          {
+            schemeId: "SCH-2026-0087",
+            title: "跟款：Cowl Neck 缎面长裙",
+            scenario: "pure_new",
+            approvalStatus: "approved",
+            syncStatus: "Synced_To_Selection",
+            goodsId: "AZ-P-87920",
+            retries: 0,
+            updated: "07-28 16:02",
+            rejectReason: null,
+            annotations: "价带可接受；注意缎面垂感与内衬厚度。",
+            progress: [
+              { key: "draft", label: "方案成稿", at: "07-27 18:20", state: "done" },
+              { key: "submit", label: "提交审批", at: "07-28 09:10", state: "done" },
+              { key: "review", label: "负责人审批", at: "07-28 15:40", state: "done", detail: "通过" },
+              { key: "sync", label: "写入选款", at: "07-28 16:02", state: "done", detail: "已关联 goods_id" },
+              { key: "plm", label: "生管 / 打版", at: null, state: "future", detail: "打通生管后可追踪" },
+              { key: "launch", label: "上架动销", at: null, state: "future", detail: "打通生管后可追踪" },
             ],
           },
           {
-            line: "Prom & Homecoming",
-            sites: [
-              { name: "Hello Molly Prom", url: "https://www.hellomolly.com/collections/prom-dresses" },
-              { name: "Alyce Paris", url: "https://int.alyceparis.com/" },
-              { name: "Sheisme", url: "https://www.sheisme.com/collections/homecoming" },
-              { name: "Zapaka", url: "https://zapaka.ca/" },
-              { name: "Stacees", url: "https://www.stacees.com/" },
-              { name: "Kiss Prom", url: "https://www.kissprom.com/" },
-              { name: "Windsor", url: "https://www.windsorstore.com/" },
+            schemeId: "SCH-2026-0088",
+            title: "正向改款：AZ8802 + 方领/后背绑带",
+            scenario: "fix_positive",
+            approvalStatus: "approved",
+            syncStatus: "Sync_Pending",
+            goodsId: "AZ-P-87901",
+            retries: 1,
+            updated: "07-29 09:18",
+            rejectReason: null,
+            annotations: "保留热卖底座，叠加方领/后背绑带；注意大码胸杯。",
+            progress: [
+              { key: "draft", label: "方案成稿", at: "07-28 20:05", state: "done" },
+              { key: "submit", label: "提交审批", at: "07-29 08:50", state: "done" },
+              { key: "review", label: "负责人审批", at: "07-29 09:05", state: "done", detail: "通过" },
+              { key: "sync", label: "写入选款", at: "07-29 09:18", state: "active", detail: "同步中 · 已重试 1 次" },
+              { key: "plm", label: "生管 / 打版", at: null, state: "future", detail: "打通生管后可追踪" },
+              { key: "launch", label: "上架动销", at: null, state: "future", detail: "打通生管后可追踪" },
             ],
           },
+          {
+            schemeId: "SCH-2026-0085",
+            title: "跟款：Halter Mermaid Wine",
+            scenario: "pure_new",
+            approvalStatus: "rejected",
+            syncStatus: "N/A",
+            goodsId: null,
+            retries: 0,
+            updated: "07-28 11:22",
+            rejectReason: "价带偏高且 BOM×5 无优势；建议改谨慎·MTO 或下调目标售价后再提。",
+            annotations: "先补齐竞品价带 P25–P75 证据，再议是否跟。",
+            progress: [
+              { key: "draft", label: "方案成稿", at: "07-27 16:00", state: "done" },
+              { key: "submit", label: "提交审批", at: "07-28 10:05", state: "done" },
+              { key: "review", label: "负责人审批", at: "07-28 11:22", state: "rejected", detail: "已驳回" },
+              { key: "sync", label: "写入选款", at: null, state: "skipped", detail: "未写入" },
+              { key: "plm", label: "生管 / 打版", at: null, state: "skipped", detail: "—" },
+              { key: "launch", label: "上架动销", at: null, state: "skipped", detail: "—" },
+            ],
+          },
+          {
+            schemeId: "SCH-2026-0082",
+            title: "负向改款：AZ6520 修复款",
+            scenario: "fix_negative",
+            approvalStatus: "approved",
+            syncStatus: "Synced_To_Selection",
+            goodsId: "AZ-P-88245",
+            retries: 0,
+            updated: "07-27 14:40",
+            rejectReason: null,
+            annotations: "优先修胸杯与肩带；保留黑色缎面与 Corset 腰线。",
+            progress: [
+              { key: "draft", label: "方案成稿", at: "07-26 17:30", state: "done" },
+              { key: "submit", label: "提交审批", at: "07-27 09:00", state: "done" },
+              { key: "review", label: "负责人审批", at: "07-27 14:20", state: "done", detail: "通过" },
+              { key: "sync", label: "写入选款", at: "07-27 14:40", state: "done", detail: "已关联 goods_id" },
+              { key: "plm", label: "生管 / 打版", at: null, state: "future", detail: "打通生管后可追踪" },
+              { key: "launch", label: "上架动销", at: null, state: "future", detail: "打通生管后可追踪" },
+            ],
+          },
+          {
+            schemeId: "SCH-2026-0080",
+            title: "跟款：Cape Sleeve Navy",
+            scenario: "pure_new",
+            approvalStatus: "in_review",
+            syncStatus: "N/A",
+            goodsId: null,
+            retries: 0,
+            updated: "07-29 10:40",
+            rejectReason: null,
+            annotations: null,
+            progress: [
+              { key: "draft", label: "方案成稿", at: "07-29 09:55", state: "done" },
+              { key: "submit", label: "提交审批", at: "07-29 10:40", state: "done" },
+              { key: "review", label: "负责人审批", at: null, state: "active", detail: "待负责人处理" },
+              { key: "sync", label: "写入选款", at: null, state: "pending", detail: "—" },
+              { key: "plm", label: "生管 / 打版", at: null, state: "future", detail: "打通生管后可追踪" },
+              { key: "launch", label: "上架动销", at: null, state: "future", detail: "打通生管后可追踪" },
+            ],
+          },
+          {
+            schemeId: "SCH-2026-0079",
+            title: "跟款：Corset Split Gown",
+            scenario: "pure_new",
+            approvalStatus: "approved",
+            syncStatus: "Sync_Failed",
+            goodsId: null,
+            retries: 3,
+            updated: "07-26 11:05",
+            rejectReason: null,
+            annotations: "通过；同步失败需运维排查选款接口。",
+            progress: [
+              { key: "draft", label: "方案成稿", at: "07-25 15:10", state: "done" },
+              { key: "submit", label: "提交审批", at: "07-25 16:00", state: "done" },
+              { key: "review", label: "负责人审批", at: "07-26 09:30", state: "done", detail: "通过" },
+              { key: "sync", label: "写入选款", at: "07-26 11:05", state: "failed", detail: "未关联 goods_id · 已重试 3 次" },
+              { key: "plm", label: "生管 / 打版", at: null, state: "blocked", detail: "待同步成功" },
+              { key: "launch", label: "上架动销", at: null, state: "blocked", detail: "待同步成功" },
+            ],
+          },
+        ];
+
+        const ATTR_MAP_ROWS = [
+          { internal: "鱼尾（廓形）", external: "mermaid / fishtail / trumpet", source: "人工+AI", hits: 42, status: "已生效" },
+          { internal: "方领（领型）", external: "square neck / straight neck", source: "AI 建议采纳", hits: 31, status: "已生效" },
+          { internal: "一字肩（领型）", external: "bardot / off-shoulder", source: "待确认", hits: 8, status: "待确认" },
+          { internal: "太空棉（面料）", external: "scuba fabric", source: "待确认", hits: 5, status: "待确认" },
         ];
 
         const ALL_SITES = SITE_GROUPS.flatMap((g) => g.sites.map((s) => s.name));
 
         const MONITOR_ROWS = [
-          { id: "m1", site: "Oh Polly", line: "AT", title: "Satin Column Gown", category: "Formal", color: "Champagne", silhouette: "Column", neckline: "Straight", fabric: "Satin", length: "Floor", price: 168, listPrice: 210, discount: 20, reviews: 128, productUrl: "https://www.ohpolly.com/products/satin-column-gown-champagne", detailTags: "satin · column · straight neck", prevRank: null, rank: 12, status: "上新", shipsNow: true, adPlays: 128400, adClicks: 6200, adDays: 18, likes: 4200, comments: 318, shares: 890, platform: "Facebook", advertiser: "Oh Polly Official", adCopy: "Evening-ready satin column — shop the champagne edit.", similar: null, scenario: "pure_new", socialHot: "官方主推缎面直筒", voc: null, imgHue: "210" },
-          { id: "m2", site: "House of CB", line: "AT", title: "Off-shoulder Mermaid", category: "Formal", color: "Emerald", silhouette: "Mermaid", neckline: "Off-shoulder", fabric: "Stretch Crepe", length: "Floor", price: 149, listPrice: 149, discount: 0, reviews: 96, productUrl: "https://app.houseofcb.com/product/off-shoulder-mermaid", detailTags: "stretch crepe · mermaid · off-shoulder", prevRank: 22, rank: 7, status: "上升", shipsNow: false, adPlays: 86000, adClicks: 4100, adDays: 11, likes: 2800, comments: 156, shares: 420, platform: "Instagram", advertiser: "House of CB", adCopy: "Emerald mermaid silhouette for formal nights.", similar: null, scenario: "pure_new", socialHot: "Ins 试穿热帖", voc: null, imgHue: "150" },
-          { id: "m3", site: "Club L London", line: "AT", title: "Cowl Neck A-line", category: "Formal", color: "Dusty Blue", silhouette: "A-line", neckline: "Cowl", fabric: "Chiffon", length: "Floor", price: 139, listPrice: 175, discount: 21, reviews: 54, productUrl: "https://clubllondon.com/products/cowl-neck-a-line", detailTags: "chiffon · a-line · cowl · draped", prevRank: null, rank: 31, status: "上新", shipsNow: true, adPlays: 19200, adClicks: 900, adDays: 6, likes: 640, comments: 42, shares: 88, platform: "Facebook", advertiser: "Club L", adCopy: "Soft cowl neck A-line in dusty blue.", similar: null, scenario: "pure_new", socialHot: null, voc: null, imgHue: "200" },
-          { id: "m4", site: "Oh Polly", line: "AT", title: "Square Neck Satin", category: "Formal", color: "Black", silhouette: "Column", neckline: "Square", fabric: "Satin", length: "Floor", price: 159, listPrice: 199, discount: 20, reviews: 210, productUrl: "https://www.ohpolly.com/products/square-neck-satin-black", detailTags: "satin · column · square neck", prevRank: 11, rank: 9, status: "上升", shipsNow: true, adPlays: 52300, adClicks: 2800, adDays: 24, likes: 1900, comments: 210, shares: 305, platform: "Facebook", advertiser: "Oh Polly Official", adCopy: "Square neck satin — timeless black.", similar: "AT-2841", scenario: "fix_negative", socialHot: null, voc: "透内衬、肩带易滑", imgHue: "0" },
-          { id: "m5", site: "Babyboo", line: "AT", title: "Halter Neck Evening", category: "Formal", color: "Wine", silhouette: "Mermaid", neckline: "Halter", fabric: "Satin", length: "Floor", price: 179, listPrice: 179, discount: 0, reviews: 340, productUrl: "https://www.babyboofashion.com/products/halter-neck-evening", detailTags: "satin · mermaid · halter · plunge", prevRank: 18, rank: 15, status: "上升", shipsNow: false, adPlays: 210700, adClicks: 9500, adDays: 41, likes: 8600, comments: 520, shares: 1400, platform: "TikTok", advertiser: "Babyboo Fashion", adCopy: "Halter evening mermaid — wine red statement.", similar: "AT-1902", scenario: "fix_positive", socialHot: "达人挂链转化高", voc: null, imgHue: "340" },
+          { id: "m1", site: "Oh Polly", line: "AT", title: "Satin Column Gown", category: "Atelier", color: "Champagne", silhouette: "Column", neckline: "Straight", fabric: "Satin", length: "Floor", price: 168, listPrice: 210, discount: 20, reviews: 128, productUrl: "https://www.ohpolly.com/products/satin-column-gown-champagne", detailTags: "satin · column · straight neck", prevRank: null, rank: 12, status: "上新", shipsNow: true, adPlays: 128400, adClicks: 6200, adDays: 18, likes: 4200, comments: 318, shares: 890, platform: "Facebook", advertiser: "Oh Polly Official", adCopy: "Evening-ready satin column — shop the champagne edit.", similar: null, scenario: "pure_new", socialHot: "官方主推缎面直筒", voc: null, imgHue: "210" },
+          { id: "m2", site: "House of CB", line: "AT", title: "Off-shoulder Mermaid", category: "Atelier", color: "Emerald", silhouette: "Mermaid", neckline: "Off-shoulder", fabric: "Stretch Crepe", length: "Floor", price: 149, listPrice: 149, discount: 0, reviews: 96, productUrl: "https://app.houseofcb.com/product/off-shoulder-mermaid", detailTags: "stretch crepe · mermaid · off-shoulder", prevRank: 22, rank: 7, status: "上升", shipsNow: false, adPlays: 86000, adClicks: 4100, adDays: 11, likes: 2800, comments: 156, shares: 420, platform: "Instagram", advertiser: "House of CB", adCopy: "Emerald mermaid silhouette for formal nights.", similar: null, scenario: "pure_new", socialHot: "Ins 试穿热帖", voc: null, imgHue: "150" },
+          { id: "m3", site: "Club L London", line: "AT", title: "Cowl Neck A-line", category: "Atelier", color: "Dusty Blue", silhouette: "A-line", neckline: "Cowl", fabric: "Chiffon", length: "Floor", price: 139, listPrice: 175, discount: 21, reviews: 54, productUrl: "https://clubllondon.com/products/cowl-neck-a-line", detailTags: "chiffon · a-line · cowl · draped", prevRank: null, rank: 31, status: "上新", shipsNow: true, adPlays: 19200, adClicks: 900, adDays: 6, likes: 640, comments: 42, shares: 88, platform: "Facebook", advertiser: "Club L", adCopy: "Soft cowl neck A-line in dusty blue.", similar: null, scenario: "pure_new", socialHot: null, voc: null, imgHue: "200" },
+          { id: "m4", site: "Oh Polly", line: "AT", title: "Square Neck Satin", category: "Atelier", color: "Black", silhouette: "Column", neckline: "Square", fabric: "Satin", length: "Floor", price: 159, listPrice: 199, discount: 20, reviews: 210, productUrl: "https://www.ohpolly.com/products/square-neck-satin-black", detailTags: "satin · column · square neck", prevRank: 11, rank: 9, status: "上升", shipsNow: true, adPlays: 52300, adClicks: 2800, adDays: 24, likes: 1900, comments: 210, shares: 305, platform: "Facebook", advertiser: "Oh Polly Official", adCopy: "Square neck satin — timeless black.", similar: "AT-2841", scenario: "fix_negative", socialHot: null, voc: "透内衬、肩带易滑", imgHue: "0" },
+          { id: "m5", site: "Babyboo", line: "AT", title: "Halter Neck Evening", category: "Atelier", color: "Wine", silhouette: "Mermaid", neckline: "Halter", fabric: "Satin", length: "Floor", price: 179, listPrice: 179, discount: 0, reviews: 340, productUrl: "https://www.babyboofashion.com/products/halter-neck-evening", detailTags: "satin · mermaid · halter · plunge", prevRank: 18, rank: 15, status: "上升", shipsNow: false, adPlays: 210700, adClicks: 9500, adDays: 41, likes: 8600, comments: 520, shares: 1400, platform: "TikTok", advertiser: "Babyboo Fashion", adCopy: "Halter evening mermaid — wine red statement.", similar: "AT-1902", scenario: "fix_positive", socialHot: "达人挂链转化高", voc: null, imgHue: "340" },
           { id: "m6", site: "Birdy Grey", line: "BD", title: "One-shoulder Chiffon", category: "Bridesmaid", color: "Sage", silhouette: "A-line", neckline: "One-shoulder", fabric: "Chiffon", length: "Floor", price: 119, listPrice: 139, discount: 14, reviews: 42, productUrl: "https://www.birdygrey.com/products/one-shoulder-chiffon", detailTags: "chiffon · a-line · one-shoulder", prevRank: 8, rank: 28, status: "下降", shipsNow: false, adPlays: 8400, adClicks: 310, adDays: 9, likes: 220, comments: 18, shares: 35, platform: "Instagram", advertiser: "Birdy Grey", adCopy: "Sage one-shoulder chiffon for the bridal party.", similar: null, scenario: "pure_new", socialHot: null, voc: null, imgHue: "120" },
           { id: "m7", site: "Hello Molly Prom", line: "Prom & Homecoming", title: "Slit Mermaid Satin", category: "Prom", color: "Ivory", silhouette: "Mermaid", neckline: "V-neck", fabric: "Satin", length: "Floor", price: 189, listPrice: 189, discount: 0, reviews: 18, productUrl: "https://www.hellomolly.com/products/slit-mermaid-satin", detailTags: "satin · mermaid · v-neck · side slit", prevRank: 5, rank: null, status: "下架", shipsNow: false, adPlays: 0, adClicks: 0, adDays: 0, likes: 0, comments: 0, shares: 0, platform: "Facebook", advertiser: "Hello Molly", adCopy: "", similar: "AT-1902", scenario: "fix_positive", socialHot: null, voc: null, imgHue: "40" },
           { id: "m8", site: "Kiss Prom", line: "Prom & Homecoming", title: "Cape Sleeve Gown", category: "Prom", color: "Navy", silhouette: "Column", neckline: "Crew", fabric: "Satin", length: "Floor", price: 198, listPrice: 248, discount: 20, reviews: 156, productUrl: "https://www.kissprom.com/products/cape-sleeve-gown", detailTags: "satin · column · cape sleeve", prevRank: null, rank: 4, status: "上新", shipsNow: true, adPlays: 156000, adClicks: 7800, adDays: 14, likes: 5100, comments: 390, shares: 980, platform: "TikTok", advertiser: "Kiss Prom", adCopy: "Cape sleeve navy gown — prom ready.", similar: null, scenario: "pure_new", socialHot: "TikTok 挑战贴纸", voc: null, imgHue: "230" },
@@ -183,7 +357,7 @@
             id: "ih1",
             goodsId: "1056247",
             name: "Paulina Corset Maxi",
-            category: "Formal",
+            category: "Atelier",
             color: "Black",
             silhouette: "Column",
             fabric: "Satin",
@@ -232,7 +406,7 @@
             id: "ih2",
             goodsId: "1061802",
             name: "Lorie Ruched Mini",
-            category: "Formal",
+            category: "Atelier",
             color: "Black",
             silhouette: "A-line",
             fabric: "Satin",
@@ -279,7 +453,7 @@
             id: "ih3",
             goodsId: "1049021",
             name: "Rosalie Cowl Maxi",
-            category: "Formal",
+            category: "Atelier",
             color: "Emerald",
             silhouette: "Mermaid",
             fabric: "Stretch Crepe",
@@ -326,7 +500,7 @@
             id: "ih4",
             goodsId: "1033550",
             name: "Hazel Mesh Mini",
-            category: "Formal",
+            category: "Atelier",
             color: "Black",
             silhouette: "A-line",
             fabric: "Mesh",
@@ -372,7 +546,7 @@
             id: "ih5",
             goodsId: "1072109",
             name: "Portia Scarf Strapless",
-            category: "Formal",
+            category: "Atelier",
             color: "Ivory",
             silhouette: "Column",
             fabric: "Chiffon",
@@ -878,6 +1052,12 @@
         const state = {
           route: "monitor",
           role: "ops",
+          categoryLine: "AT",
+          market: "all",
+          accountOpen: false,
+          poolSort: "hot",
+          poolEmailOnly: false,
+          attrFilter: null,
           mcTab: "sites",
           monitorExpanded: true,
           sidebarCollapsed: false,
@@ -886,6 +1066,7 @@
           sitesView: "feed",
           siteLine: "AT",
           selectedSites: null,
+          selectedPlatforms: null,
           selectedMonitorIds: [],
           adDetailId: null,
           internalDetailId: null,
@@ -902,8 +1083,16 @@
             shipsNow: "全部",
             hasAd: "全部",
             similar: "全部",
+            fabric: "全部",
+            silhouette: "全部",
+            neckline: "全部",
+            sleeve: "全部",
+            length: "全部",
+            color: "全部",
+            pattern: "全部",
+            listed: "全部",
           },
-          scenarioFilter: "all",
+          scenarioFilter: "pure_new",
           selectedOppId: "opp-01",
           scheme: null,
           rejectReason: "",
@@ -912,6 +1101,7 @@
           aiParamsOpen: false,
           aiAnalyzed: false,
           schemeReviewOpen: false,
+          receiptDetailId: null,
           schemeAnnotations: "",
           aiParams: {
             trendWeight: 25,
@@ -924,7 +1114,24 @@
           },
         };
 
-        const opportunityList = OPPORTUNITIES.slice();
+        const opportunityList = OPPORTUNITIES.slice().map((o) => {
+          if (o.scenario === "fix_negative" && !o.negFeedback) {
+            o.negFeedback = {
+              ret: o.id === "opp-neg-1" || /2841|透内衬/.test(JSON.stringify(o)) ? "退货率 26.4%（> AT P75）" : "退货率 21.8%（> AT P75）",
+              voc: (o.similar && o.similar.note) || o.voc || "VOC「商品问题」：结构槽点待拆解",
+              social: /翻车|透内衬/.test(JSON.stringify(o)) ? "Ins 翻车帖 1 条（is_negative_viral）" : "无翻车帖",
+            };
+            o.fixDirection = o.fixDirection || "改款方向：保留版型主料；修正 VOC 槽点（内衬/肩带/拉链等）";
+            o.mkShare = o.mkShare || { US: "55%", UK: "30%", AU: "15%" };
+          }
+          if (o.scenario === "fix_positive" && !o.overlay) {
+            o.overlay = {
+              attr: "竞品热卖属性：方领 + 后背绑带",
+              src: "属性榜 集中度 2.6× + 2.8×（热销 Top50 拆解）",
+            };
+          }
+          return o;
+        });
 
         const app = document.getElementById("app");
         const toastEl = document.getElementById("toast");
@@ -1017,7 +1224,7 @@
               : opp.title.includes("—")
                 ? opp.title.split("—").pop().trim()
                 : "";
-          const categoryMap = { Formal: "Formal Dresses", Bridesmaid: "Bridesmaid Dresses", Prom: "Prom Dresses" };
+          const categoryMap = { Atelier: "Formal Dresses", Bridesmaid: "Bridesmaid Dresses", Prom: "Prom Dresses" };
           const category = goods
             ? goods.category
             : mon
@@ -1151,6 +1358,8 @@
         }
 
         function setRoute(id, opts) {
+          if (id === "ai") id = "scheme";
+          if (id === "sitesConfig") id = "dashboard";
           if (!ROUTES.some((r) => r.id === id)) return;
           state.route = id;
           if (id === "monitor") state.monitorExpanded = true;
@@ -1166,8 +1375,18 @@
 
         function filteredMonitor() {
           const f = state.filters;
+          const atSites = new Set(sitesInLine(state.categoryLine || "AT"));
           return MONITOR_ROWS.filter((r) => {
-            if (state.activeSite !== "全部" && r.site !== state.activeSite) return false;
+            if (state.categoryLine === "AT" && r.line && r.line !== "AT" && !atSites.has(r.site)) {
+              // keep AT-line rows; drop explicit non-AT lines when viewing AT
+              if (r.line !== "AT") return false;
+            }
+            if (state.selectedSites != null && state.selectedSites.length && !state.selectedSites.includes(r.site)) return false;
+            else if (state.selectedSites == null && state.activeSite && state.activeSite !== "全部" && r.site !== state.activeSite) return false;
+            if (state.mcTab === "ads" && state.selectedPlatforms != null && state.selectedPlatforms.length) {
+              const plat = normalizePlatform(r.platform);
+              if (!state.selectedPlatforms.includes(plat)) return false;
+            }
             if (f.category !== "全部" && r.category !== f.category) return false;
             if (f.status !== "全部" && r.status !== f.status) return false;
             if (f.shipsNow === "是" && !r.shipsNow) return false;
@@ -1176,9 +1395,109 @@
             if (f.hasAd === "无投放" && r.adPlays > 0) return false;
             if (f.similar === "有相似" && !r.similar) return false;
             if (f.similar === "无相似" && r.similar) return false;
+            if (!matchesDesignFilters(r, f)) return false;
+            if (f.listed === "本周上新" && r.status !== "上新") return false;
+            if (f.listed === "近7天" && !(r.status === "上新" || r.status === "上升")) return false;
+            if (f.listed === "近15天" && r.status === "下架") return false;
+            if (f.listed === "近30天" && r.status === "下架") return false;
             if (state.mcTab === "ads" && !(r.adPlays > 0)) return false;
+            if (state.market !== "all") {
+              const site = (SITE_GROUPS.find((g) => g.line === state.categoryLine) || SITE_GROUPS[0]).sites.find((s) => s.name === r.site);
+              if (site && site.markets && !site.markets.includes(state.market)) return false;
+            }
             return true;
           });
+        }
+
+        const AD_PLATFORMS = [
+          { value: "Facebook", label: "Facebook" },
+          { value: "Instagram", label: "Instagram" },
+          { value: "TikTok", label: "Tik Tok" },
+        ];
+
+        function normalizePlatform(p) {
+          const s = String(p || "").replace(/\s+/g, "");
+          if (/tiktok/i.test(s)) return "TikTok";
+          if (/instagram/i.test(s)) return "Instagram";
+          if (/facebook|meta/i.test(s)) return "Facebook";
+          return p || "";
+        }
+
+        function designFilterOpts() {
+          const mon = MONITOR_ROWS;
+          const ih = INTERNAL_HOTS;
+          const uniq = (arr) => ["全部", ...new Set(arr.filter(Boolean))];
+          return {
+            fabrics: uniq([...mon.map((r) => r.fabric), ...ih.map((r) => r.fabric)]),
+            silhouettes: uniq([...mon.map((r) => r.silhouette), ...ih.map((r) => r.silhouette)]),
+            necklines: uniq(mon.map((r) => r.neckline)),
+            lengths: uniq(mon.map((r) => r.length)),
+            colors: uniq([...mon.map((r) => r.color), ...ih.map((r) => r.color)]),
+            patterns: ["全部", "纯色", "印花", "亮片"],
+            sleeves: ["全部", "无袖", "短袖", "长袖"],
+          };
+        }
+
+        function matchesDesignFilters(r, f) {
+          if (f.fabric && f.fabric !== "全部" && r.fabric != null && r.fabric !== f.fabric) return false;
+          if (f.silhouette && f.silhouette !== "全部" && r.silhouette != null && r.silhouette !== f.silhouette) return false;
+          if (f.neckline && f.neckline !== "全部" && r.neckline != null && r.neckline !== f.neckline) return false;
+          if (f.length && f.length !== "全部" && r.length != null && r.length !== f.length) return false;
+          if (f.color && f.color !== "全部" && r.color != null && r.color !== f.color) return false;
+          if (f.sleeve && f.sleeve !== "全部" && r.sleeve != null && r.sleeve !== f.sleeve) return false;
+          if (f.pattern && f.pattern !== "全部") {
+            const tags = String(r.detailTags || r.fabric || "").toLowerCase();
+            if (f.pattern === "亮片" && !(tags.includes("sequin") || tags.includes("bead") || /亮片/.test(tags))) return false;
+            if (f.pattern === "印花" && !(tags.includes("print") || /印花/.test(tags))) return false;
+            if (f.pattern === "纯色" && (tags.includes("sequin") || tags.includes("print") || tags.includes("bead"))) return false;
+          }
+          return true;
+        }
+
+        function renderDesignDetailRow(f) {
+          const o = designFilterOpts();
+          return `
+            <div class="zf-row">
+              <div class="zf-label">设计细节</div>
+              <div class="zf-body">
+                <label class="zf-select"><span>面料</span><select data-ff="fabric">${o.fabrics.map((s) => `<option ${f.fabric === s ? "selected" : ""}>${s}</option>`).join("")}</select></label>
+                <label class="zf-select"><span>廓形</span><select data-ff="silhouette">${o.silhouettes.map((s) => `<option ${f.silhouette === s ? "selected" : ""}>${s}</option>`).join("")}</select></label>
+                <label class="zf-select"><span>领型</span><select data-ff="neckline">${o.necklines.map((s) => `<option ${f.neckline === s ? "selected" : ""}>${s}</option>`).join("")}</select></label>
+                <label class="zf-select"><span>裙长</span><select data-ff="length">${o.lengths.map((s) => `<option ${f.length === s ? "selected" : ""}>${s}</option>`).join("")}</select></label>
+                <label class="zf-select"><span>颜色</span><select data-ff="color">${o.colors.map((s) => `<option ${f.color === s ? "selected" : ""}>${s}</option>`).join("")}</select></label>
+                <label class="zf-select"><span>图案</span><select data-ff="pattern">${o.patterns.map((s) => `<option ${f.pattern === s ? "selected" : ""}>${s}</option>`).join("")}</select></label>
+                <label class="zf-select"><span>袖长</span><select data-ff="sleeve">${o.sleeves.map((s) => `<option ${(f.sleeve || "全部") === s ? "selected" : ""}>${s}</option>`).join("")}</select></label>
+              </div>
+            </div>`;
+        }
+
+        function designSelectedChips(f) {
+          const chips = [];
+          if (f.fabric !== "全部") chips.push(["fabric", "面料", f.fabric]);
+          if (f.silhouette !== "全部") chips.push(["silhouette", "廓形", f.silhouette]);
+          if (f.neckline !== "全部") chips.push(["neckline", "领型", f.neckline]);
+          if (f.length !== "全部") chips.push(["length", "裙长", f.length]);
+          if (f.color !== "全部") chips.push(["color", "颜色", f.color]);
+          if (f.pattern !== "全部") chips.push(["pattern", "图案", f.pattern]);
+          if (f.sleeve && f.sleeve !== "全部") chips.push(["sleeve", "袖长", f.sleeve]);
+          return chips;
+        }
+
+        function renderSelectedChipsRow(chips) {
+          if (!chips.length) return "";
+          return `<div class="zf-row zf-row--chips"><div class="zf-label">已选</div><div class="zf-body filter-selected-row">${chips
+            .map(([k, lab, v]) => `<button type="button" class="chip chip--removable" data-clear-filter="${k}">${lab}: ${escapeHtml(v)} ×</button>`)
+            .join("")}</div></div>`;
+        }
+
+        function resetDesignFilters() {
+          state.filters.fabric = "全部";
+          state.filters.silhouette = "全部";
+          state.filters.neckline = "全部";
+          state.filters.sleeve = "全部";
+          state.filters.length = "全部";
+          state.filters.color = "全部";
+          state.filters.pattern = "全部";
         }
 
         function monitorStats(rows) {
@@ -1299,7 +1618,7 @@
           const nav = document.getElementById("sidenav");
           const monitorOpen = state.route === "monitor" && state.monitorExpanded;
           let html = "";
-          ROUTES.forEach((r) => {
+          ROUTES.filter((r) => r.nav !== "footer").forEach((r) => {
             if (r.id === "monitor") {
               html += `
                 <div class="sidenav-group ${monitorOpen ? "is-open" : ""} ${state.route === "monitor" ? "is-current" : ""}">
@@ -1358,7 +1677,35 @@
               else render();
             })
           );
+          renderFooterNav();
           syncShellChrome();
+        }
+
+        function renderFooterNav() {
+          const footer = document.querySelector(".sidebar-footer");
+          if (!footer) return;
+          let slot = document.getElementById("footer-nav");
+          if (!slot) {
+            slot = document.createElement("div");
+            slot.id = "footer-nav";
+            slot.className = "footer-nav";
+            const sync = footer.querySelector(".sync-status");
+            if (sync) sync.after(slot);
+            else footer.prepend(slot);
+          }
+          const mapping = ROUTES.find((r) => r.id === "mapping");
+          if (!mapping) {
+            slot.innerHTML = "";
+            return;
+          }
+          slot.innerHTML = `
+            <button type="button" class="sidenav-link sidenav-link--footer ${state.route === "mapping" ? "is-active" : ""}" data-footer-route="mapping">
+              <span class="sidenav-icon" aria-hidden="true">${mapping.icon}</span>
+              <span class="sidenav-label">${mapping.label}</span>
+            </button>`;
+          slot.querySelectorAll("[data-footer-route]").forEach((b) =>
+            b.addEventListener("click", () => setRoute(b.getAttribute("data-footer-route")))
+          );
         }
 
 
@@ -1397,9 +1744,10 @@
           const title = opts.title;
           const body = opts.body;
           const foot = opts.foot;
+          const wideCls = opts.wide ? " center-modal--wide" : "";
           return `
             <div class="center-mask" id="${id}-mask" data-modal-mask="${id}">
-              <div class="center-modal" role="dialog" aria-modal="true" aria-labelledby="${id}-title">
+              <div class="center-modal${wideCls}" role="dialog" aria-modal="true" aria-labelledby="${id}-title">
                 <div class="center-modal__head">
                   <div>
                     <h3 id="${id}-title">${title}</h3>
@@ -1950,7 +2298,7 @@
             title: "AI 分析逻辑说明",
             body: `
               <ol class="help-logic">
-                <li><strong>决策对象</strong>：先选定机会编码，再点击「开始分析」。</li>
+                <li><strong>决策对象</strong>：方案页右侧直接展示当前关联机会的 AI 分析结果。</li>
                 <li><strong>多维打分（每项 1–5 分）</strong>：
                   <ul>
                     <li><strong>流行趋势</strong>：元素/面料/颜色是否贴合趋势 · 来源：监控报告 · 流行趋势</li>
@@ -1999,31 +2347,16 @@
 
         function renderSchemeReviewModal() {
           if (!state.schemeReviewOpen) return "";
-          const opp = selectedOpp();
-          const s = ensureScheme();
-          const img = sampleImageFromOpp(opp);
+          // 与方案编辑页同构：左表单 + 右 AI 全文，供负责人批注
+          state.aiAnalyzed = true;
+          const sheet = renderSchemeEditorBody({ readonly: true, forReview: true });
           return renderCenterModal({
             id: "scheme-review",
             title: "完整方案 · 批注",
+            wide: true,
             body: `
-              <div class="scheme-review-layout">
-                <div class="sample-thumb" style="${img.style}" title="${escapeAttr(img.label)}"></div>
-                <dl class="scheme-kv">
-                  <div class="scheme-kv__row"><dt>机会编码</dt><dd>${escapeHtml(oppCode(opp))}</dd></div>
-                  <div class="scheme-kv__row"><dt>品名</dt><dd>${escapeHtml(s.productName)}</dd></div>
-                  <div class="scheme-kv__row"><dt>品类</dt><dd>${escapeHtml(s.category)}</dd></div>
-                  <div class="scheme-kv__row"><dt>款式类型</dt><dd>${escapeHtml(s.styleType)}</dd></div>
-                  <div class="scheme-kv__row"><dt>样衣颜色</dt><dd>${escapeHtml(s.sampleColor)}</dd></div>
-                  <div class="scheme-kv__row"><dt>主面料</dt><dd>${escapeHtml(s.fabric)}</dd></div>
-                  <div class="scheme-kv__row"><dt>计划售价</dt><dd>$${s.plannedPrice || "—"}</dd></div>
-                  <div class="scheme-kv__row"><dt>最高成本价</dt><dd>${maxCost(s.plannedPrice, s.multiplier) || "—"} RMB</dd></div>
-                  <div class="scheme-kv__row"><dt>尺码类型</dt><dd>${escapeHtml(s.sizeType)}</dd></div>
-                  <div class="scheme-kv__row"><dt>提案人</dt><dd>${escapeHtml(s.proposer)}</dd></div>
-                  <div class="scheme-kv__row"><dt>提案佐证</dt><dd>${escapeHtml(s.evidence)}</dd></div>
-                  <div class="scheme-kv__row"><dt>版单备注</dt><dd>${escapeHtml(s.orderRemark || "—")}</dd></div>
-                </dl>
-              </div>
-              <label class="field" style="margin-top:14px;display:grid">
+              ${sheet}
+              <label class="field scheme-review-anno">
                 <span style="font-size:var(--text-xs);font-weight:600;color:var(--text-soft)">方案批注</span>
                 <textarea id="scheme-annotation-input" rows="4" placeholder="品类负责人可在此批注结构、定价、面料或风险点…">${escapeHtml(state.schemeAnnotations || "")}</textarea>
               </label>`,
@@ -2036,42 +2369,23 @@
           const meta = ROUTES.find((r) => r.id === state.route);
           const titleEl = document.getElementById("page-title");
           const actionsEl = document.getElementById("page-header-actions");
-          document.getElementById("page-description").textContent = meta.desc;
-          const opp = selectedOpp();
+          const descEl = document.getElementById("page-description");
           const crumb = document.getElementById("breadcrumb");
+          // 除选品管理外也不展示面包屑：统一隐藏，内容上移
+          if (crumb) {
+            crumb.innerHTML = "";
+            crumb.hidden = true;
+          }
+          const ph = document.querySelector(".page-header"); if (ph) ph.classList.add("page-header--no-crumb");
           if (state.route === "monitor") {
             const ch = channelMeta(state.mcTab);
             titleEl.textContent = ch.label;
-            document.getElementById("page-description").textContent = ch.desc;
-            crumb.hidden = false;
-            crumb.innerHTML = `<span>监控报告</span><span>/</span><span>${ch.label}</span>`;
-            if (actionsEl) actionsEl.innerHTML = "";
-          } else if (state.route === "pool") {
-            titleEl.textContent = meta.title;
-            crumb.innerHTML = "";
-            crumb.hidden = true;
-            if (actionsEl) actionsEl.innerHTML = "";
-          } else if (state.route === "ai") {
-            titleEl.innerHTML = `AI选款分析<button type="button" class="help-icon" id="hdr-ai-help" title="AI分析逻辑说明" aria-label="AI分析逻辑说明">?</button>`;
-            if (actionsEl)
-              actionsEl.innerHTML = `<button type="button" class="btn btn--ghost" id="hdr-ai-params">调节公式参数</button>`;
-            crumb.hidden = false;
-            crumb.innerHTML = `
-              <button type="button" data-go="pool">选品管理</button>
-              <span>/</span><span>${escapeHtml(oppCode(opp))}</span>
-              <span>/</span><span>${meta.label}</span>`;
+            descEl.textContent = ch.desc;
           } else {
             titleEl.textContent = meta.title;
-            if (actionsEl) actionsEl.innerHTML = "";
-            crumb.hidden = false;
-            crumb.innerHTML = `
-              <button type="button" data-go="pool">选品管理</button>
-              <span>/</span><span>${SCENARIO_META[opp.scenario].label}</span>
-              <span>/</span><span>${meta.label}</span>`;
+            descEl.textContent = meta.desc;
           }
-          crumb.querySelectorAll("[data-go]").forEach((b) =>
-            b.addEventListener("click", () => setRoute(b.getAttribute("data-go")))
-          );
+          if (actionsEl) actionsEl.innerHTML = "";
           const helpBtn = document.getElementById("hdr-ai-help");
           if (helpBtn) helpBtn.onclick = () => { state.aiHelpOpen = true; render(); };
           const paramsBtn = document.getElementById("hdr-ai-params");
@@ -2108,7 +2422,6 @@
         }
 
         function renderMonitor() {
-          if (state.mcTab === "social") state.mcTab = "trends";
           if (state.mcTab === "trends") {
             return `<div class="page-stack">${renderTrends()}</div>`;
           }
@@ -2117,6 +2430,12 @@
           }
           if (state.mcTab === "sites") {
             return renderSitesChannel();
+          }
+          if (state.mcTab === "email") {
+            return renderEmailChannel();
+          }
+          if (state.mcTab === "social") {
+            return renderSocialChannel();
           }
 
           const rows = filteredMonitor();
@@ -2140,25 +2459,55 @@
                       <div class="kpi-card"><span class="kpi-card__label">已勾选</span><span class="kpi-card__value">${selectedCount}</span><span class="kpi-card__hint">待加入机会池</span></div>
                     </div>`;
 
+          const fabrics = ["全部", ...new Set(MONITOR_ROWS.map((r) => r.fabric).filter(Boolean))];
+          const silhouettes = ["全部", ...new Set(MONITOR_ROWS.map((r) => r.silhouette).filter(Boolean))];
+          const necklines = ["全部", ...new Set(MONITOR_ROWS.map((r) => r.neckline).filter(Boolean))];
+          const lengths = ["全部", ...new Set(MONITOR_ROWS.map((r) => r.length).filter(Boolean))];
+          const colors = ["全部", ...new Set(MONITOR_ROWS.map((r) => r.color).filter(Boolean))];
+          // 广告投流：媒体平台多选
+          const pickedPlatforms = state.selectedPlatforms;
+          const platformChecks = AD_PLATFORMS.map((p) => {
+            const on = pickedPlatforms == null || pickedPlatforms.includes(p.value);
+            return `<label class="site-check"><input type="checkbox" data-platform-check="${escapeAttr(p.value)}" ${on ? "checked" : ""}><span>${escapeHtml(p.label)}</span></label>`;
+          }).join("");
+          const selectedChips = [];
+          if (pickedPlatforms && pickedPlatforms.length && pickedPlatforms.length < AD_PLATFORMS.length) {
+            selectedChips.push([
+              "platforms",
+              "媒体平台",
+              pickedPlatforms.map((v) => (AD_PLATFORMS.find((p) => p.value === v) || { label: v }).label).join("、"),
+            ]);
+          }
+          selectedChips.push(...designSelectedChips(f));
+          if (f.listed !== "全部") selectedChips.push(["listed", "上架/检出", f.listed]);
+          if (f.status !== "全部") selectedChips.push(["status", "状态", f.status]);
+          if (f.hasAd !== "全部") selectedChips.push(["hasAd", "付费投放", f.hasAd]);
           const filters = `
-            <div class="filter-card">
-              <div class="filter-card__row">
-                <div class="field"><label>周次</label>
-                  <select data-ff="week"><option ${f.week === "2026-W30" ? "selected" : ""}>2026-W30</option><option ${f.week === "2026-W29" ? "selected" : ""}>2026-W29</option></select></div>
-                <div class="field"><label>品类</label>
-                  <select data-ff="category">${cats.map((s) => `<option ${f.category === s ? "selected" : ""}>${s}</option>`).join("")}</select></div>
-                <div class="field"><label>状态</label>
-                  <select data-ff="status">${["全部", "上新", "上升", "下降", "下架"].map((s) => `<option ${f.status === s ? "selected" : ""}>${s}</option>`).join("")}</select></div>
-                <div class="field"><label>Ships Now</label>
-                  <select data-ff="shipsNow">${["全部", "是", "否"].map((s) => `<option ${f.shipsNow === s ? "selected" : ""}>${s}</option>`).join("")}</select></div>
-                <div class="field"><label>付费投放</label>
-                  <select data-ff="hasAd">${["全部", "有投放", "无投放"].map((s) => `<option ${f.hasAd === s ? "selected" : ""}>${s}</option>`).join("")}</select></div>
-                <div class="field"><label>内部相似</label>
-                  <select data-ff="similar">${["全部", "有相似", "无相似"].map((s) => `<option ${f.similar === s ? "selected" : ""}>${s}</option>`).join("")}</select></div>
-                <div class="filter-card__actions">
-                  <button type="button" class="btn btn--ghost" id="btn-reset-f">重置</button>
+            <div class="filter-card filter-card--zhiyi">
+              <div class="zf-row">
+                <div class="zf-label">媒体平台</div>
+                <div class="zf-body zf-body--sites">
+                  <div class="site-check-inline">${platformChecks}</div>
+                  <button type="button" class="btn btn--ghost btn--sm" id="btn-reset-f">重置</button>
                 </div>
               </div>
+              <div class="zf-row">
+                <div class="zf-label">基础筛选</div>
+                <div class="zf-body">
+                  <label class="zf-select"><span>周次</span>
+                    <select data-ff="week"><option ${f.week === "2026-W30" ? "selected" : ""}>2026-W30</option><option ${f.week === "2026-W29" ? "selected" : ""}>2026-W29</option></select></label>
+                  <label class="zf-select"><span>品类</span>
+                    <select data-ff="category">${cats.map((s) => `<option ${f.category === s ? "selected" : ""}>${s}</option>`).join("")}</select></label>
+                  <label class="zf-select"><span>状态</span>
+                    <select data-ff="status">${["全部", "上新", "上升", "下降", "下架"].map((s) => `<option ${f.status === s ? "selected" : ""}>${s}</option>`).join("")}</select></label>
+                  <label class="zf-select"><span>付费投放</span>
+                    <select data-ff="hasAd">${["全部", "有投放", "无投放"].map((s) => `<option ${f.hasAd === s ? "selected" : ""}>${s}</option>`).join("")}</select></label>
+                  <label class="zf-select"><span>上架/检出</span>
+                    <select data-ff="listed">${["全部", "本周上新", "近7天", "近15天", "近30天"].map((s) => `<option ${f.listed === s ? "selected" : ""}>${s}</option>`).join("")}</select></label>
+                </div>
+              </div>
+              ${renderDesignDetailRow(f)}
+              ${renderSelectedChipsRow(selectedChips)}
             </div>`;
 
           let title = "竞品网站动态";
@@ -2179,7 +2528,7 @@
               <div class="data-panel">
                 <div class="data-panel__header">
                   <div><h3>广告投流</h3><p>卡片展示播放、投放天数与互动；点击「查看详情」展开商品属性</p></div>
-                  <span class="data-panel__meta">${sorted.length} 条 · ${f.week}${state.activeSite !== "全部" ? " · " + state.activeSite : ""}</span>
+                  <span class="data-panel__meta">${sorted.length} 条 · ${f.week}${state.selectedPlatforms && state.selectedPlatforms.length ? " · " + state.selectedPlatforms.map((v) => (AD_PLATFORMS.find((p) => p.value === v) || { label: v }).label).join("、") : " · 全部平台"}</span>
                 </div>
                 <div class="ad-card-grid">
                   ${sorted
@@ -2243,7 +2592,8 @@
 
         function sitesInLine(line) {
           const g = SITE_GROUPS.find((x) => x.line === line);
-          return g ? g.sites.map((s) => s.name) : [];
+          if (!g) return [];
+          return g.sites.filter((s) => s.enabled !== false).map((s) => s.name);
         }
 
         function filteredSitesRows(mode) {
@@ -2256,9 +2606,11 @@
             if (r.line !== line) return false;
             if (!picked.includes(r.site)) return false;
             if (!forReport) {
+              if (f.category !== "全部" && r.category !== f.category) return false;
               if (f.status !== "全部" && r.status !== f.status) return false;
               if (f.shipsNow === "是" && !r.shipsNow) return false;
               if (f.shipsNow === "否" && r.shipsNow) return false;
+              if (!matchesDesignFilters(r, f)) return false;
             }
             return true;
           });
@@ -2279,39 +2631,63 @@
           const sites = sitesInLine(line);
           const picked = state.selectedSites;
           const isFeed = mode !== "report";
-          const siteChecks = isFeed
-            ? `<div class="field field--sites"><label>竞品网站</label>
-                <div class="site-check-inline">
-                  ${sites
-                    .map((name) => {
-                      const on = picked == null || picked.includes(name);
-                      return `<label class="site-check"><input type="checkbox" data-site-check="${escapeAttr(name)}" ${on ? "checked" : ""}><span>${escapeHtml(name)}</span></label>`;
-                    })
-                    .join("")}
+          const cats = ["全部", ...new Set(MONITOR_ROWS.filter((r) => r.line === line).map((r) => r.category))];
+          if (!isFeed) {
+            return `
+              <div class="filter-card filter-card--zhiyi">
+                <div class="zf-row">
+                  <div class="zf-label">基础筛选</div>
+                  <div class="zf-body zf-body--sites">
+                    <label class="zf-select"><span>周次</span>
+                      <select data-ff="week"><option ${f.week === "2026-W30" ? "selected" : ""}>2026-W30</option><option ${f.week === "2026-W29" ? "selected" : ""}>2026-W29</option></select></label>
+                    <label class="zf-select"><span>品类线</span>
+                      <select id="site-line-select">
+                        ${SITE_GROUPS.map((g) => `<option value="${escapeAttr(g.line)}" ${g.line === line ? "selected" : ""}>${g.line}</option>`).join("")}
+                      </select></label>
+                    <button type="button" class="btn btn--ghost btn--sm" id="btn-reset-sites">重置</button>
+                  </div>
                 </div>
-              </div>`
-            : "";
-          const extraFilters = isFeed
-            ? `<div class="field"><label>状态</label>
-                  <select data-ff="status">${["全部", "上新", "上升", "下降", "下架"].map((s) => `<option ${f.status === s ? "selected" : ""}>${s}</option>`).join("")}</select></div>
-                <div class="field"><label>Ships Now</label>
-                  <select data-ff="shipsNow">${["全部", "是", "否"].map((s) => `<option ${f.shipsNow === s ? "selected" : ""}>${s}</option>`).join("")}</select></div>`
-            : "";
+              </div>`;
+          }
+          const siteChecks = sites
+            .map((name) => {
+              const on = picked == null || picked.includes(name);
+              return `<label class="site-check"><input type="checkbox" data-site-check="${escapeAttr(name)}" ${on ? "checked" : ""}><span>${escapeHtml(name)}</span></label>`;
+            })
+            .join("");
+          const selectedChips = [];
+          if (picked && picked.length && picked.length < sites.length) {
+            selectedChips.push(["sites", "站点", picked.join("、")]);
+          }
+          if (f.status !== "全部") selectedChips.push(["status", "状态", f.status]);
+          if (f.shipsNow !== "全部") selectedChips.push(["shipsNow", "Ships Now", f.shipsNow]);
+          selectedChips.push(...designSelectedChips(f));
           return `
-            <div class="filter-card">
-              <div class="filter-card__row filter-card__row--sites">
-                <div class="field"><label>周次</label>
-                  <select data-ff="week"><option ${f.week === "2026-W30" ? "selected" : ""}>2026-W30</option><option ${f.week === "2026-W29" ? "selected" : ""}>2026-W29</option></select></div>
-                <div class="field"><label>品类</label>
-                  <select id="site-line-select">
-                    ${SITE_GROUPS.map((g) => `<option value="${escapeAttr(g.line)}" ${g.line === line ? "selected" : ""}>${g.line}</option>`).join("")}
-                  </select></div>
-                ${extraFilters}
-                ${siteChecks}
-                <div class="filter-card__actions">
-                  <button type="button" class="btn btn--ghost" id="btn-reset-sites">重置</button>
+            <div class="filter-card filter-card--zhiyi">
+              <div class="zf-row">
+                <div class="zf-label">基础筛选</div>
+                <div class="zf-body zf-body--sites">
+                  <div class="zf-body" style="flex:1;padding:0;gap:6px 8px">
+                    <label class="zf-select"><span>周次</span>
+                      <select data-ff="week"><option ${f.week === "2026-W30" ? "selected" : ""}>2026-W30</option><option ${f.week === "2026-W29" ? "selected" : ""}>2026-W29</option></select></label>
+                    <label class="zf-select"><span>品类</span>
+                      <select data-ff="category">${cats.map((s) => `<option ${f.category === s ? "selected" : ""}>${s}</option>`).join("")}</select></label>
+                    <label class="zf-select"><span>状态</span>
+                      <select data-ff="status">${["全部", "上新", "上升", "下降", "下架"].map((s) => `<option ${f.status === s ? "selected" : ""}>${s}</option>`).join("")}</select></label>
+                    <label class="zf-select"><span>Ships Now</span>
+                      <select data-ff="shipsNow">${["全部", "是", "否"].map((s) => `<option ${f.shipsNow === s ? "selected" : ""}>${s}</option>`).join("")}</select></label>
+                  </div>
+                  <button type="button" class="btn btn--ghost btn--sm" id="btn-reset-sites">重置</button>
                 </div>
               </div>
+              <div class="zf-row">
+                <div class="zf-label">竞品网站</div>
+                <div class="zf-body">
+                  <div class="site-check-inline">${siteChecks}</div>
+                </div>
+              </div>
+              ${renderDesignDetailRow(f)}
+              ${renderSelectedChipsRow(selectedChips)}
             </div>`;
         }
 
@@ -2484,7 +2860,7 @@
         function renderSiteProductCard(r) {
           const checked = rowChecked(r.id);
           const hue = r.imgHue || "220";
-          const disc = r.discount > 0 ? `<span class="prod-card__discount">-${r.discount}%</span>` : "";
+          const disc = r.discount > 0 ? `<span class="prod-card__discount" title="竞品站现价相对原价折扣">${r.discount}% OFF</span>` : "";
           const listP =
             r.listPrice && r.listPrice > r.price
               ? `<span class="prod-card__list-price">$${r.listPrice}</span>`
@@ -2592,6 +2968,7 @@
             if (f.category !== "全部" && r.category !== f.category) return false;
             if (state.internalOppFilter === "fix_negative" && r.opportunity !== "fix_negative") return false;
             if (state.internalOppFilter === "fix_positive" && r.opportunity !== "fix_positive") return false;
+            if (!matchesDesignFilters(r, f)) return false;
             return true;
           }).slice().sort((a, b) => b.sales - a.sales);
         }
@@ -2656,22 +3033,30 @@
                 <div class="kpi-card"><span class="kpi-card__label">正向改款线索</span><span class="kpi-card__value">${pos}</span><span class="kpi-card__hint">保留热卖元素</span></div>
                 <div class="kpi-card"><span class="kpi-card__label">已勾选</span><span class="kpi-card__value">${selectedCount}</span><span class="kpi-card__hint">待加入机会池</span></div>
               </div>
-              <div class="filter-card">
-                <div class="filter-card__row">
-                  <div class="field"><label>周次</label>
-                    <select data-ff="week"><option ${f.week === "2026-W30" ? "selected" : ""}>2026-W30</option><option ${f.week === "2026-W29" ? "selected" : ""}>2026-W29</option></select></div>
-                  <div class="field"><label>品类</label>
-                    <select data-ff="category">${cats.map((s) => `<option ${f.category === s ? "selected" : ""}>${s}</option>`).join("")}</select></div>
-                  <div class="field"><label>机会类型</label>
-                    <select id="internal-opp-filter">
-                      <option value="all" ${state.internalOppFilter === "all" ? "selected" : ""}>全部</option>
-                      <option value="fix_negative" ${state.internalOppFilter === "fix_negative" ? "selected" : ""}>负向改款</option>
-                      <option value="fix_positive" ${state.internalOppFilter === "fix_positive" ? "selected" : ""}>正向改款</option>
-                    </select></div>
-                  <div class="filter-card__actions">
-                    <button type="button" class="btn btn--ghost" id="btn-reset-internal">重置</button>
+              <div class="filter-card filter-card--zhiyi">
+                <div class="zf-row">
+                  <div class="zf-label">基础筛选</div>
+                  <div class="zf-body zf-body--sites">
+                    <div class="zf-body" style="flex:1;padding:0;gap:6px 8px">
+                      <label class="zf-select"><span>周次</span>
+                        <select data-ff="week"><option ${f.week === "2026-W30" ? "selected" : ""}>2026-W30</option><option ${f.week === "2026-W29" ? "selected" : ""}>2026-W29</option></select></label>
+                      <label class="zf-select"><span>品类</span>
+                        <select data-ff="category">${cats.map((s) => `<option ${f.category === s ? "selected" : ""}>${s}</option>`).join("")}</select></label>
+                      <label class="zf-select"><span>机会类型</span>
+                        <select id="internal-opp-filter">
+                          <option value="all" ${state.internalOppFilter === "all" ? "selected" : ""}>全部</option>
+                          <option value="fix_negative" ${state.internalOppFilter === "fix_negative" ? "selected" : ""}>负向改款</option>
+                          <option value="fix_positive" ${state.internalOppFilter === "fix_positive" ? "selected" : ""}>正向改款</option>
+                        </select></label>
+                    </div>
+                    <button type="button" class="btn btn--ghost btn--sm" id="btn-reset-internal">重置</button>
                   </div>
                 </div>
+                ${renderDesignDetailRow(f)}
+                ${renderSelectedChipsRow([
+                  ...(f.category !== "全部" ? [["category", "品类", f.category]] : []),
+                  ...designSelectedChips(f),
+                ])}
               </div>
               <div class="data-panel">
                 <div class="data-panel__header">
@@ -3227,40 +3612,160 @@
             </div>`;
         }
 
+        function sortedPoolList(list) {
+          const arr = list.slice();
+          if (state.scenarioFilter !== "pure_new" && state.scenarioFilter !== "all") return arr;
+          const emailSites = new Set(EMAIL_ROWS.map((e) => e.brand));
+          let out = arr;
+          if (state.poolEmailOnly) {
+            out = out.filter((o) => emailSites.has(o.site) || (o.emailHero));
+          }
+          const key = state.poolSort || "hot";
+          out.sort((a, b) => {
+            if (key === "new") {
+              const ta = a.detectedAt || a.listRank || 999;
+              const tb = b.detectedAt || b.listRank || 999;
+              // prefer status 上新 first then lower listRank as proxy of newer
+              const sa = a.monitorId && (MONITOR_ROWS.find((r) => r.id === a.monitorId) || {}).status === "上新" ? 0 : 1;
+              const sb = b.monitorId && (MONITOR_ROWS.find((r) => r.id === b.monitorId) || {}).status === "上新" ? 0 : 1;
+              if (sa !== sb) return sa - sb;
+              return (a.listRank || 999) - (b.listRank || 999);
+            }
+            if (key === "ads") {
+              const score = (o) => (Number(o.adPlays) || 0) * Math.max(1, Number(o.adDays) || 1);
+              return score(b) - score(a);
+            }
+            // hot
+            return (a.listRank || 999) - (b.listRank || 999);
+          });
+          return out;
+        }
+
+        function renderNegCard(opp) {
+          const fb = opp.negFeedback || {
+            ret: opp.similar && opp.similar.note ? "退货率偏高（待接站内口径）" : "退货率 —",
+            voc: opp.voc || (opp.similar && opp.similar.note) || "VOC 待补",
+            social: "无翻车帖",
+          };
+          const fix = opp.formDirection || "改款方向：待方案编辑明确保留项 / 修正项";
+          const mk = opp.mkShare || { US: "—", UK: "—", AU: "—" };
+          return `
+            <article class="bloom-opp-card bloom-opp-card--neg" data-opp-select="${opp.id}">
+              <div class="bloom-opp-card__media" style="${sampleImageFromOpp(opp).style}">
+                <span class="bloom-opp-card__badge">SKC</span>
+              </div>
+              <div class="bloom-opp-card__main">
+                <div class="bloom-opp-card__head">
+                  <strong>${escapeHtml(opp.title)}</strong>
+                  <span class="quadrant-tag quadrant-tag--risk">负向改款</span>
+                </div>
+                <div class="bloom-opp-card__evidence">
+                  <b>负反馈证据</b>：${escapeHtml(fb.ret)}<br>${escapeHtml(fb.voc)}<br>
+                  <span class="muted">${escapeHtml(fb.social)}</span>
+                </div>
+                <div class="bloom-opp-card__mk"><span class="muted">销量分布</span>
+                  <span class="chip chip--sm">US ${escapeHtml(String(mk.US))}</span>
+                  <span class="chip chip--sm">UK ${escapeHtml(String(mk.UK))}</span>
+                  <span class="chip chip--sm">AU ${escapeHtml(String(mk.AU))}</span>
+                </div>
+                <div class="bloom-opp-card__form">🛠 ${escapeHtml(fix)}</div>
+                <div class="bloom-opp-card__sigs">
+                  <span class="chip chip--sm">AD —</span>
+                  <span class="chip chip--sm">EDM —</span>
+                  ${/翻车/.test(fb.social) ? '<span class="chip chip--sm chip--warn">⚠ 翻车</span>' : ""}
+                  <span class="chip chip--sm">内部 poor</span>
+                </div>
+              </div>
+              <div class="bloom-opp-card__actions">
+                <button type="button" class="btn btn--primary" data-opp-scheme="${opp.id}">创建方案</button>
+              </div>
+            </article>`;
+        }
+
+        function renderPosCard(opp) {
+          const overlay = opp.overlay || { attr: "竞品热卖属性：待选", src: "属性榜" };
+          return `
+            <article class="bloom-opp-card bloom-opp-card--pos" data-opp-select="${opp.id}">
+              <div class="bloom-opp-card__media" style="${sampleImageFromOpp(opp).style}">
+                <span class="bloom-opp-card__badge">SKC</span>
+              </div>
+              <div class="bloom-opp-card__main">
+                <div class="bloom-opp-card__head">
+                  <strong>${escapeHtml(opp.title)}</strong>
+                  <span class="quadrant-tag quadrant-tag--mature">正向改款</span>
+                </div>
+                <div class="bloom-opp-card__form">
+                  <b>叠加属性</b>：${escapeHtml(overlay.attr)}<br>
+                  <span class="muted">${escapeHtml(overlay.src)}</span>
+                </div>
+                ${opp.similar ? `<p class="muted bloom-opp-card__base">底座：${escapeHtml(opp.similar.goodsId)} · ${escapeHtml(opp.similar.note || "")}</p>` : ""}
+              </div>
+              <div class="bloom-opp-card__actions">
+                <button type="button" class="btn btn--primary" data-opp-scheme="${opp.id}">创建方案</button>
+              </div>
+            </article>`;
+        }
+
         function renderPool() {
-          const list =
+          const raw =
             state.scenarioFilter === "all"
               ? opportunityList
               : opportunityList.filter((o) => o.scenario === state.scenarioFilter);
+          const list = sortedPoolList(raw);
+          const sortBar =
+            state.scenarioFilter === "pure_new" || state.scenarioFilter === "all"
+              ? `<div class="pool-filter__row pool-filter__row--tools">
+                  <div class="pool-filter__group">
+                    <span class="pool-filter__label">排列方式</span>
+                    <div class="pool-sort-seg" role="group" aria-label="排列方式">
+                      ${[["hot", "按热销榜"], ["new", "按上新时间"], ["ads", "按广告投流力度"]]
+                        .map(
+                          ([k, lab]) =>
+                            `<button type="button" class="pool-sort-seg__btn ${state.poolSort === k ? "is-active" : ""}" data-pool-sort="${k}">${lab}</button>`
+                        )
+                        .join("")}
+                    </div>
+                  </div>
+                  <div class="pool-filter__divider" aria-hidden="true"></div>
+                  <div class="pool-filter__group">
+                    <span class="pool-filter__label">附加筛选</span>
+                    <label class="pool-email-toggle ${state.poolEmailOnly ? "is-on" : ""}">
+                      <input type="checkbox" id="pool-email-only" ${state.poolEmailOnly ? "checked" : ""}>
+                      <span class="pool-email-toggle__box" aria-hidden="true"></span>
+                      <span class="pool-email-toggle__text">仅看竞品邮件主推</span>
+                    </label>
+                  </div>
+                </div>`
+              : "";
 
-          return `
-            <div class="filter-card">
-              <div class="pool-toolbar">
-                <div class="scenario-tabs" role="tablist">
-                  ${Object.keys(SCENARIO_META)
-                    .map((key) => {
-                      const m = SCENARIO_META[key];
-                      const colorCls =
-                        key === "pure_new"
-                          ? "scenario-tab--new"
-                          : key === "fix_negative"
-                            ? "scenario-tab--neg"
-                            : key === "fix_positive"
-                              ? "scenario-tab--pos"
-                              : "";
-                      const tip = m.tip
-                        ? `<span class="scenario-tab__tip" id="tip-${key}" role="tooltip"><strong>${escapeHtml(m.label)}</strong>${escapeHtml(m.tip)}</span>`
-                        : "";
-                      return `
-                    <button type="button" class="scenario-tab ${colorCls} ${state.scenarioFilter === key ? "is-active" : ""}" data-filter="${key}"${m.tip ? ` aria-describedby="tip-${key}"` : ""}>
-                      ${escapeHtml(m.label)}${tip}
-                    </button>`;
-                    })
-                    .join("")}
-                </div>
+          let body = "";
+          if (state.scenarioFilter === "fix_negative") {
+            body = `<div class="notice notice--warn">⚠ 负向改款 = 根据用户负反馈（VOC 商品问题 / 高退货率 / 社媒翻车）对在售款做结构性修复。翻车帖自动触发 high_voc_risk。</div>
+              <div class="bloom-opp-list">${list.map(renderNegCard).join("") || '<div class="empty-hint">暂无负向改款机会</div>'}</div>`;
+          } else if (state.scenarioFilter === "fix_positive") {
+            body = `<div class="notice notice--info">◈ 正向改款 = 站内热销款（确定性底座）× 竞品热卖属性（增量方向）。下方属性榜展示集中度算法；点击属性可筛选机会。</div>
+              <div class="data-panel" style="margin-bottom:14px">
+                <div class="data-panel__header"><div><h3>竞品热卖属性榜</h3><p>本批次 · 热销 Top50 拆解 · 集中度 ≥1.5× 才上榜</p></div></div>
+                <div class="table-wrap"><table class="data-table">
+                  <thead><tr><th>属性（维度）</th><th>热销款中出现</th><th>集中度</th><th>竞品加码</th><th>趋势</th></tr></thead>
+                  <tbody>
+                    ${ATTR_HOT_RANK.map((r) => `
+                      <tr class="clickable ${state.attrFilter === r.attr ? "is-selected" : ""}" data-attr-filter="${escapeAttr(r.attr)}">
+                        <td><strong>${escapeHtml(r.dim)}</strong> · ${escapeHtml(r.attr)}</td>
+                        <td>${escapeHtml(r.hotShare)}</td>
+                        <td>${r.conc}×（热销 ${r.hotShare} vs 全站 ${r.allShare}）</td>
+                        <td>${escapeHtml(r.boost)}</td>
+                        <td>${escapeHtml(r.trend)}</td>
+                      </tr>`).join("")}
+                  </tbody>
+                </table></div>
               </div>
-            </div>
-            <div class="opp-grid">
+              <div class="bloom-opp-list">${list
+                .filter((o) => !state.attrFilter || (o.overlay && o.overlay.attr && o.overlay.attr.includes(state.attrFilter)))
+                .map(renderPosCard)
+                .join("") || '<div class="empty-hint">暂无匹配的正向改款机会</div>'}</div>`;
+          } else {
+            body = `<div class="opp-grid">
               ${list
                 .map((opp) => {
                   const sc = SCENARIO_META[opp.scenario];
@@ -3281,25 +3786,62 @@
                         <div><span>投放播放 / 点击</span><strong>${opp.adPlays != null ? opp.adPlays + " / " + opp.adClicks : "暂无"}</strong></div>
                         <div><span>颜色数</span><strong>${opp.colors != null ? opp.colors : "—"}</strong></div>
                       </div>
-                      ${opp.similar ? `<p class="muted" style="margin:4px 0 0">${escapeHtml(opp.similar.goodsId)} · ${escapeHtml(opp.similar.note)}</p>` : ""}
                     </div>
                     <div class="opp-card__foot opp-card__foot--actions-only">
-                      <div class="opp-card__actions">
-                        <button type="button" class="btn btn--ghost btn--sm btn--ai-shine" data-opp-ai="${opp.id}">AI分析</button>
+                      <div class="opp-card__actions opp-card__actions--single">
                         <button type="button" class="btn btn--primary btn--sm" data-opp-scheme="${opp.id}">创建方案</button>
                       </div>
                     </div>
                   </article>`;
                 })
                 .join("")}
+            </div>`;
+          }
+
+          return `
+            <div class="filter-card pool-filter">
+              <div class="pool-filter__row pool-filter__row--type">
+                <div class="pool-filter__group pool-filter__group--grow">
+                  <span class="pool-filter__label">选品类型</span>
+                  <div class="scenario-tabs" role="tablist">
+                    ${Object.keys(SCENARIO_META)
+                      .filter((k) => k !== "all")
+                      .map((key) => {
+                        const m = SCENARIO_META[key];
+                        const colorCls =
+                          key === "pure_new"
+                            ? "scenario-tab--new"
+                            : key === "fix_negative"
+                              ? "scenario-tab--neg"
+                              : key === "fix_positive"
+                                ? "scenario-tab--pos"
+                                : "";
+                        const tip = m.tip
+                          ? `<span class="scenario-tab__tip" id="tip-${key}" role="tooltip"><strong>${escapeHtml(m.label)}</strong>${escapeHtml(m.tip)}</span>`
+                          : "";
+                        return `
+                      <button type="button" class="scenario-tab ${colorCls} ${state.scenarioFilter === key ? "is-active" : ""}" data-filter="${key}"${m.tip ? ` aria-describedby="tip-${key}"` : ""}>
+                        ${escapeHtml(m.label)}${tip}
+                      </button>`;
+                      })
+                      .join("")}
+                  </div>
+                </div>
+              </div>
+              ${sortBar}
             </div>
+            ${body}
             ${footer("monitor", null)}`;
         }
 
-        function renderScheme() {
+        function renderSchemeEditorBody(opts) {
+          opts = opts || {};
           const opp = selectedOpp();
           const s = ensureScheme();
+          state.aiAnalyzed = true;
           const cost = maxCost(s.plannedPrice, s.multiplier);
+          const ro = opts.readonly ? " readonly" : "";
+          const dis = opts.readonly ? " disabled" : "";
           const catOpts = ["Formal Dresses", "Bridesmaid Dresses"]
             .map((x) => `<option ${s.category === x ? "selected" : ""}>${x}</option>`)
             .join("");
@@ -3311,8 +3853,10 @@
             { hue: (baseHue + 68) % 360, caption: "参考图 2" },
             { hue: (baseHue + 340) % 360, caption: "参考图 3" },
           ];
+          const aiPanel = renderAiPanel();
           return `
-            ${state.rejectReason ? `<div class="alert-inline">驳回回流：${state.rejectReason}</div>` : ""}
+            <div class="scheme-ai-layout${opts.forReview ? " scheme-ai-layout--review" : ""}">
+            <div class="scheme-ai-layout__form">
             <div class="prefill-banner">
               <span><strong>关联机会</strong> ${escapeHtml(oppCode(opp))}</span>
               <span><strong>场景</strong> ${SCENARIO_META[opp.scenario].label}</span>
@@ -3413,51 +3957,57 @@
               </div>
             </div>
             <p class="scheme-align-note">对齐运营下版单字段：款式基础、面料参考与定价、改款说明。</p>
-            ${footer("ai", "approval", state.role === "lead" ? "进入审批" : "提交审批")}`;
+            </div>
+            <aside class="scheme-ai-layout__ai">
+              <div class="scheme-ai-layout__ai-head">
+                <h3>AI 选款分析</h3>
+                <div class="scheme-ai-layout__ai-actions">
+                  <button type="button" class="help-icon" id="hdr-ai-help" title="AI分析逻辑说明">?</button>
+                  <button type="button" class="btn btn--ghost btn--sm" id="hdr-ai-params">调节公式</button>
+                </div>
+              </div>
+              ${aiPanel}
+            </aside>
+            </div>`;
+        }
+
+        function renderScheme() {
+          const body = renderSchemeEditorBody({});
+          return `
+            ${state.rejectReason ? `<div class="alert-inline">驳回回流：${state.rejectReason}</div>` : ""}
+            ${body}
+            ${footer("pool", "approval", state.role === "lead" ? "进入审批" : "提交审批")}
+            ${renderAiHelpModal()}
+            ${renderAiParamsModal()}`;
+        }
+
+        function renderAiPanel() {
+          // inlined from former AI page (right rail)
+          return renderAiBody();
         }
 
         function renderAi() {
+          // legacy hash #ai → scheme with analysis
+          state.route = "scheme";
+          return renderScheme();
+        }
+
+        function renderAiBody() {
           const opp = selectedOpp();
           const img = sampleImageFromOpp(opp);
-          const p = state.aiParams;
-          const weightSum =
-            Number(p.trendWeight) +
-            Number(p.competitorWeight) +
-            Number(p.adWeight) +
-            Number(p.internalWeight) +
-            Number(p.socialWeight);
-          const card = state.aiAnalyzed ? buildAiScorecard(opp) : null;
+          // 方案页右栏：直接展示当前关联机会的分析结果（无需再选/再点开始分析）
+          state.aiAnalyzed = true;
+          const card = buildAiScorecard(opp);
           return `
-            <div class="ai-control-bar">
-              <div class="field">
-                <label>分析机会</label>
-                <select id="ai-opp-select">
-                  ${opportunityList
-                    .map(
-                      (o) =>
-                        `<option value="${escapeAttr(o.id)}" ${o.id === opp.id ? "selected" : ""}>${escapeHtml(oppCode(o))} · ${escapeHtml(o.title)}</option>`
-                    )
-                    .join("")}
-                </select>
-              </div>
-              <button type="button" class="btn btn--primary" id="btn-start-ai">开始分析</button>
-            </div>
-            <div class="ai-sample-row">
-              <div class="sample-thumb sample-thumb--lg" style="${img.style}"></div>
+            <div class="ai-sample-row ai-sample-row--compact">
+              <div class="sample-thumb" style="${img.style}"></div>
               <div class="ai-sample-meta">
-                <div class="muted">样品图 · 来自方案字段</div>
+                <div class="muted">关联机会 · 自动分析</div>
                 <strong>${escapeHtml(img.label)}</strong>
-                <div class="muted">${escapeHtml(oppCode(opp))} · ${SCENARIO_META[opp.scenario].label}</div>
-                <div class="muted">${
-                  state.aiAnalyzed
-                    ? `综合分 ${card.total} · 建议推≥${card.go} · 谨慎≥${card.caution}`
-                    : `已选机会，待分析 · 五维权重合计 ${weightSum}%（分析完成后给出评分）`
-                }</div>
+                <div class="muted">${escapeHtml(oppCode(opp))} · ${SCENARIO_META[opp.scenario].label} · 综合分 ${card.total}</div>
               </div>
             </div>
-            ${
-              state.aiAnalyzed
-                ? `<div class="ai-decision">
+            <div class="ai-decision">
               <div>
                 <div class="ai-decision__label">Decision</div>
                 <div class="ai-decision__value ${card.decisionClass}">${card.decision}</div>
@@ -3495,7 +4045,7 @@
                     .join("")}
                 </tbody>
               </table></div>
-              <p class="report-muted">评分维度不含定价 / 可生产性；定价与改款动作见下方「建议动作」。相似款判定：群形、布料、领形、颜色、裙长等可比属性重合 ≥80%。决策映射参考 Amazon Decision Framework 的 Go / Test First / No-Go。</p>
+              <p class="report-muted">评分维度不含定价 / 可生产性；定价与改款动作见下方「建议动作」。</p>
             </div>
             <div class="ai-sections">
               <div class="ai-section"><h4>建议动作</h4><ul>${card.actions.map((x) => `<li>${escapeHtml(x)}</li>`).join("")}</ul></div>
@@ -3503,12 +4053,7 @@
                 <div class="ai-section"><h4>证据缺口</h4><ul>${card.gaps.map((x) => `<li>${escapeHtml(x)}</li>`).join("")}</ul></div>
                 <div class="ai-section"><h4>风险</h4><ul>${card.risks.map((x) => `<li>${escapeHtml(x)}</li>`).join("")}</ul></div>
               </div>
-            </div>`
-                : `<div class="empty-hint">请选择机会编码后点击「开始分析」。分析前不展示评分与建议推阈值；完成后将输出五维 1–5 分与结论。</div>`
-            }
-            ${renderAiHelpModal()}
-            ${renderAiParamsModal()}
-            ${footer("pool", "scheme", "进入方案编辑")}`;
+            </div>`;
         }
 
         function renderApproval() {
@@ -3559,18 +4104,138 @@
               <div class="scheme-block approval-actions">
                 <h3>审批操作</h3>
                 ${
-                  state.role === "ops"
-                    ? `<div class="alert-inline alert-inline--info">当前为品类运营：可提交，终审需品类负责人。</div>
-                       <button type="button" class="btn btn--primary" id="btn-submit-lead">提交至品类负责人</button>`
-                    : `<button type="button" class="btn btn--ghost" id="btn-view-scheme">查看完整方案并批注</button>
+                  state.role === "lead"
+                    ? `<button type="button" class="btn btn--ghost" id="btn-view-scheme">查看完整方案并批注</button>
                        <label class="field"><span style="font-size:var(--text-xs);font-weight:600;color:var(--text-soft)">驳回原因（驳回时必填）</span>
                        <textarea id="reject-reason">${escapeHtml(state.rejectReason)}</textarea></label>
                        <button type="button" class="btn btn--primary" id="btn-approve">通过并写入选款</button>
                        <button type="button" class="btn btn--danger" id="btn-reject">驳回</button>`
+                    : `<div class="alert-inline alert-inline--info">当前为${state.role === "admin" ? "管理员（可配置，不可终审）" : "品类运营"}：可提交，通过/驳回/备注仅品类负责人。</div>
+                       <button type="button" class="btn btn--primary" id="btn-submit-lead">提交至品类负责人</button>`
                 }
               </div>
             </div>
-            ${renderSchemeReviewModal()}`;
+            ${renderSchemeReviewModal()}
+            ${renderSyncReceipts()}`;
+        }
+
+        function renderSyncReceipts() {
+          const approvalLabel = {
+            approved: ["已通过", "tag--success"],
+            rejected: ["已驳回", "tag--danger"],
+            in_review: ["审批中", "tag--waiting"],
+            submitted: ["已提交", "tag--waiting"],
+          };
+          const syncLabel = {
+            Synced_To_Selection: ["已写入选款", "tag--success"],
+            Sync_Pending: ["同步中", "tag--waiting"],
+            Sync_Failed: ["同步失败", "tag--danger"],
+            "N/A": ["未写入", ""],
+          };
+          const stepCls = {
+            done: "is-done",
+            active: "is-active",
+            rejected: "is-rejected",
+            failed: "is-failed",
+            pending: "is-pending",
+            future: "is-future",
+            blocked: "is-blocked",
+            skipped: "is-skipped",
+          };
+          const canSeeFeedback = state.role === "ops" || state.role === "lead" || state.role === "admin";
+          const rows = SYNC_RECEIPTS.map((r) => {
+            const open = state.receiptDetailId === r.schemeId;
+            const [aLab, aCls] = approvalLabel[r.approvalStatus] || [r.approvalStatus, ""];
+            const [sLab, sCls] = syncLabel[r.syncStatus] || [r.syncStatus, ""];
+            const linked = !!(r.goodsId && r.goodsId !== "—");
+            const goodsCell = linked
+              ? `<span class="mono receipt-goods is-linked">${escapeHtml(r.goodsId)}</span>`
+              : `<span class="receipt-goods is-missing">未关联</span>`;
+            const steps = r.progress || [];
+            const detail = open
+              ? `<div class="receipt-detail">
+                  <div class="receipt-detail__block receipt-detail__block--progress">
+                    <h4>审批进度 · 落地链路追踪</h4>
+                    <p class="receipt-detail__hint">成稿→审批→写入选款；其后生管/打版、上架动销待下游打通后按 goods_id 回写</p>
+                    <ol class="receipt-progress receipt-progress--h">
+                      ${steps
+                        .map(
+                          (p) => `
+                        <li class="receipt-progress__step ${stepCls[p.state] || ""} ${["plm", "launch"].includes(p.key) ? "is-landing" : ""}">
+                          <span class="receipt-progress__dot"></span>
+                          <div class="receipt-progress__body">
+                            <strong>${escapeHtml(p.label)}</strong>
+                            ${p.detail ? `<span class="receipt-progress__detail">${escapeHtml(p.detail)}</span>` : ""}
+                            <span class="receipt-progress__meta">${p.at ? escapeHtml(p.at) : "—"}</span>
+                          </div>
+                        </li>`
+                        )
+                        .join("")}
+                    </ol>
+                  </div>
+                  ${
+                    canSeeFeedback
+                      ? `<div class="receipt-detail__block receipt-detail__block--feedback">
+                    <h4>驳回建议 / 负责人批注${state.role === "ops" ? " · 运营可阅" : ""}</h4>
+                    ${
+                      r.rejectReason
+                        ? `<div class="receipt-feedback receipt-feedback--reject"><strong>驳回建议</strong><p>${escapeHtml(r.rejectReason)}</p></div>`
+                        : `<div class="receipt-feedback muted">无驳回记录</div>`
+                    }
+                    ${
+                      r.annotations
+                        ? `<div class="receipt-feedback receipt-feedback--note"><strong>批注</strong><p>${escapeHtml(r.annotations)}</p></div>`
+                        : `<div class="receipt-feedback muted">暂无批注</div>`
+                    }
+                  </div>`
+                      : ""
+                  }
+                </div>`
+              : "";
+            return `
+              <tr class="receipt-row ${open ? "is-open" : ""}">
+                <td>
+                  <div class="receipt-scheme">
+                    <span class="mono">${escapeHtml(r.schemeId)}</span>
+                    <span class="muted">${escapeHtml(r.title)}</span>
+                  </div>
+                </td>
+                <td>${SCENARIO_META[r.scenario] ? SCENARIO_META[r.scenario].label : r.scenario}</td>
+                <td><span class="tag ${aCls}">${aLab}</span></td>
+                <td>${goodsCell}</td>
+                <td><span class="tag ${sCls}">${sLab}</span>${r.retries ? `<span class="muted"> · 重试 ${r.retries}</span>` : ""}</td>
+                <td>${escapeHtml(r.updated)}</td>
+                <td class="col-actions">
+                  <div class="receipt-row__actions">
+                    <button type="button" class="btn btn--ghost btn--sm" data-receipt-toggle="${escapeAttr(r.schemeId)}">${open ? "收起" : "查看进度"}</button>
+                    ${r.syncStatus === "Sync_Failed" ? `<button type="button" class="btn btn--ghost btn--sm" data-retry-sync="${escapeAttr(r.schemeId)}">重试同步</button>` : ""}
+                  </div>
+                </td>
+              </tr>
+              ${open ? `<tr class="receipt-detail-row"><td colspan="7">${detail}</td></tr>` : ""}`;
+          }).join("");
+          return `
+            <div class="data-panel receipt-panel" style="margin-top:22px">
+              <div class="data-panel__header">
+                <div>
+                  <h3>历史方案 / 写入选款回执</h3>
+                  <p>查看审批进度与落地链路、驳回建议与批注（运营可阅）；列表可看是否关联 goods_id</p>
+                </div>
+              </div>
+              <div class="table-wrap"><table class="data-table receipt-table">
+                <colgroup>
+                  <col class="col-scheme" />
+                  <col class="col-scenario" />
+                  <col class="col-approval" />
+                  <col class="col-goods" />
+                  <col class="col-sync" />
+                  <col class="col-updated" />
+                  <col class="col-actions" />
+                </colgroup>
+                <thead><tr><th>方案</th><th>场景</th><th>审批</th><th>goods_id</th><th>写入选款</th><th>更新</th><th class="col-actions">操作</th></tr></thead>
+                <tbody>${rows}</tbody>
+              </table></div>
+            </div>`;
         }
 
         function drawRefs() {
@@ -3649,9 +4314,256 @@
           drawRefs();
         }
 
+        function srcTag(text) {
+          return `<span class="src-tag">${text}</span>`;
+        }
+
+        function renderDashboard() {
+          const nNew = opportunityList.filter((o) => o.scenario === "pure_new").length;
+          const nPos = opportunityList.filter((o) => o.scenario === "fix_positive").length;
+          const nNeg = opportunityList.filter((o) => o.scenario === "fix_negative").length;
+          const viralN = SOCIAL_ROWS.filter((x) => x.viral).length;
+          const atSites = (SITE_GROUPS.find((g) => g.line === "AT") || { sites: [] }).sites.filter((s) => s.enabled !== false).length;
+          const signalIn = MONITOR_ROWS.filter((r) => r.line === "AT" || !r.line).length;
+          const mkLabel = state.market === "all" ? "全部市场" : state.market;
+          return `
+            <div class="notice notice--info">◈ 对齐 Bloom 总览心智：<b>增量是目标</b>，覆盖/成稿/AI 是护栏，漏斗看流转，信号看健康。下方数字为演示样本；口径按真实可接数据源设计（见页底说明）。当前市场：<b>${escapeHtml(mkLabel)}</b> · 品类 <b>${escapeHtml(state.categoryLine)}</b></div>
+
+            <div class="dash-kpi-grid">
+              <div class="kpi-card kpi-card--hero">
+                <span class="kpi-card__label">★ 北极星 · 系统选款带来的增量 GMV</span>
+                <span class="kpi-card__value">$186K</span>
+                <span class="kpi-card__hint">上线以来 60 天 · 23 款已上架 · 占品类新款 GMV <b>12.4%</b>（目标 ≥10%）</span>
+              </div>
+              <div class="kpi-card">
+                <span class="kpi-card__label">30 天动销率 · 系统款 vs 人工款</span>
+                <span class="kpi-card__value">78%</span>
+                <span class="kpi-card__hint">人工选款同期 61%，<b>+17pp</b></span>
+              </div>
+              <div class="kpi-card">
+                <span class="kpi-card__label">单款平均 30 天销量</span>
+                <span class="kpi-card__value">142 件</span>
+                <span class="kpi-card__hint">对照组（同期人工）106 件，<b>+34%</b></span>
+              </div>
+              <div class="kpi-card">
+                <span class="kpi-card__label">在途款 · 写入选款后未上架</span>
+                <span class="kpi-card__value">17</span>
+                <span class="kpi-card__hint">打版 6 · 生管生产 7 · 商品信息准备 4</span>
+              </div>
+            </div>
+
+            <div class="dash-grid3">
+              <div class="data-panel">
+                <div class="data-panel__header"><div><h3>护栏 · 覆盖率（分渠道）</h3><p>分母按渠道单独定义，不合并</p></div></div>
+                <div class="table-wrap"><table class="data-table">
+                  <thead><tr><th>渠道</th><th>分母（本批应捕获）</th><th>覆盖</th></tr></thead>
+                  <tbody>
+                    <tr><td>竞品官网列表</td><td>上新 × 热卖榜前 50 = 18 款</td><td><b class="text-ok">18/18</b></td></tr>
+                    <tr><td>竞品广告在投</td><td>在投 ≥14 天 = 6 款</td><td><b class="text-ok">6/6</b></td></tr>
+                    <tr><td>竞品邮件主推</td><td>主推位 = 5 款</td><td><b class="text-ok">5/5</b></td></tr>
+                    <tr><td>社媒舆情</td><td>人工录入，无客观分母</td><td class="muted">不设覆盖率</td></tr>
+                  </tbody>
+                </table></div>
+                <p class="muted dash-foot">意义：增量的前提是「看见」——漏掉的爆款连被评估的机会都没有。覆盖率跌破 100% 才需行动。</p>
+              </div>
+              <div class="data-panel">
+                <div class="data-panel__header"><div><h3>护栏 · 成稿时长（前后对比）</h3><p>KR2 目标 −50%</p></div></div>
+                <div class="dash-bar-block">
+                  <div class="dash-bar-label">改造前 · 人工找款+成稿 <b>6.8h</b></div>
+                  <div class="dash-bar"><i style="width:100%"></i></div>
+                  <div class="dash-bar-label">现在 · 系统辅助 <b class="text-ok">3.2h（−53%）</b></div>
+                  <div class="dash-bar"><i class="is-ok" style="width:47%"></i></div>
+                </div>
+                <p class="muted dash-foot">基线 = 上线前 4 周运营人工找款抽样日记；现值 = 系统时间戳（打开机会 → 提交审批），同品类同场景口径。</p>
+              </div>
+              <div class="data-panel">
+                <div class="data-panel__header"><div><h3>护栏 · AI 质量</h3><p>防减损，不作为目标</p></div></div>
+                <div class="gate-list">
+                  <div><span class="dot ok"></span>负责人终审通过率<span class="val">84%</span></div>
+                  <div><span class="dot ok"></span>关键规则违背（越允许集）<span class="val">0 次</span></div>
+                  <div><span class="dot warn"></span>驳回原因回流<span class="val">12 条 → 提示词已迭代 3 版</span></div>
+                </div>
+                <p class="muted dash-foot">AI 建议质量最终由北极星验证：系统款卖得好，AI 才算真有用；通过率只监控是否拖累流程。</p>
+              </div>
+            </div>
+
+            <div class="data-panel" style="margin-top:14px">
+              <div class="data-panel__header"><div><h3>选品链路 · 本批次（平台内）</h3><p>AT-2026-W30 · 实时</p></div></div>
+              <div class="funnel-row">
+                <div class="funnel-step"><b>${signalIn}</b><span>信号入库</span></div>
+                <div class="funnel-step is-hl"><b>${opportunityList.length}</b><span>机会池</span></div>
+                <div class="funnel-step"><b>4</b><span>方案草稿</span></div>
+                <div class="funnel-step"><b>2</b><span>AI 建议完成</span></div>
+                <div class="funnel-step"><b>1</b><span>待负责人审批</span></div>
+                <div class="funnel-step is-hl"><b>1</b><span>已写入选款</span></div>
+              </div>
+            </div>
+
+            <div class="data-panel" style="margin-top:14px">
+              <div class="data-panel__header"><div><h3>落地链路 · 上线以来累计（下游系统）</h3><p>goods_id 全链路贯穿 · 上架后销量回流北极星</p></div></div>
+              <div class="funnel-row">
+                <div class="funnel-step"><b>40</b><span>写入选款</span></div>
+                <div class="funnel-step"><b>34</b><span>打版完成</span></div>
+                <div class="funnel-step"><b>28</b><span>生管系统生产</span></div>
+                <div class="funnel-step"><b>26</b><span>商品信息就绪</span></div>
+                <div class="funnel-step is-hl"><b>23</b><span>已上架</span></div>
+                <div class="funnel-step is-hl"><b>18</b><span>30 天内产生销量</span></div>
+              </div>
+              <p class="muted dash-foot">流失关注：打版→生产常卡面料齐套；信息就绪→上架常等摄影排期。下游时效同样决定增量兑现速度。</p>
+            </div>
+
+            <div class="two-col" style="gap:14px;margin-top:14px">
+              <div class="data-panel">
+                <div class="data-panel__header"><div><h3>五信号源健康度</h3><p>流行趋势不计入五源分母</p></div></div>
+                <div class="gate-list">
+                  <div><span class="dot ok"></span>竞品网站雷达（AT 轨）<span class="val text-ok">正常 · ${atSites} 站 · age 10h</span></div>
+                  <div><span class="dot ok"></span>竞品广告投放（Ad Library）<span class="val text-ok">正常 · Meta/TikTok · 32 条在投</span></div>
+                  <div><span class="dot ok"></span>竞品邮件主推（订阅收件箱）<span class="val text-ok">正常 · 本周 ${EMAIL_ROWS.length} 封</span></div>
+                  <div><span class="dot warn"></span>社媒舆情（人工录入）<span class="val">本周 ${SOCIAL_ROWS.length} 条 · ${viralN} 条翻车</span></div>
+                  <div><span class="dot ok"></span>AZ 相似款销量（盘古三维）<span class="val text-ok">正常 · computed 本批</span></div>
+                </div>
+              </div>
+              <div class="data-panel">
+                <div class="data-panel__header"><div><h3>三类场景分布（本批次机会）</h3></div></div>
+                <div class="gate-list">
+                  <div><span class="quadrant-tag quadrant-tag--opportunity">纯新款</span><span class="muted">竞品上新×热销，站内无同款</span><b>${nNew} 个</b></div>
+                  <div><span class="quadrant-tag quadrant-tag--mature">正向改款</span><span class="muted">站内热销 × 竞品热卖属性</span><b>${nPos} 个</b></div>
+                  <div><span class="quadrant-tag quadrant-tag--risk">负向改款</span><span class="muted">VOC / 退货 / 翻车驱动</span><b>${nNeg} 个</b></div>
+                </div>
+                <p class="muted dash-foot">场景由信号组合预判，运营在方案草稿中可修改。纯新侧重「不漏」，正向「放大确定性」，负向「止损修复」。</p>
+              </div>
+            </div>
+
+            <details class="dash-source-panel">
+              <summary>数据从哪来（均可接入 · 对照表）</summary>
+              <div class="table-wrap"><table class="data-table">
+                <thead><tr><th>区块</th><th>指标</th><th>数据来源</th><th>怎么算</th></tr></thead>
+                <tbody>
+                  <tr><td>北极星</td><td>增量 GMV / 动销 / 单款销量</td><td>选款 generation_source + goods_id + 销量 BI</td><td>系统款队列 vs 人工对照；上架后 30/60 天</td></tr>
+                  <tr><td>北极星</td><td>在途款</td><td>写入选款回执 + 打版/生管/PIM 状态</td><td>已同步且未上架，按环节拆分</td></tr>
+                  <tr><td>护栏</td><td>官网覆盖率</td><td>雷达上新表 × 热卖榜 ∩ 机会池</td><td>应捕获 / 已入池，分渠道不合并</td></tr>
+                  <tr><td>护栏</td><td>广告 / 邮件覆盖率</td><td>Ad Library · 订阅收件箱解析</td><td>在投≥14 天 / Hero·次推位命中入池</td></tr>
+                  <tr><td>护栏</td><td>成稿时长</td><td>系统时间戳 + 上线前抽样日记</td><td>打开机会 → 提交审批；同比基线</td></tr>
+                  <tr><td>护栏</td><td>AI 通过率 / 驳回回流</td><td>审批日志 · 状态机</td><td>一次通过；驳回原因回流提示词</td></tr>
+                  <tr><td>平台漏斗</td><td>信号→写入选款</td><td>本工作台状态机</td><td>按批次实时计数</td></tr>
+                  <tr><td>落地漏斗</td><td>写入→上架→动销</td><td>选款 / PLM / 生管 / PIM / BI</td><td>goods_id 贯穿只读同步</td></tr>
+                  <tr><td>健康度</td><td>五信号源</td><td>爬取 manifest · 人工录入台 · 盘古</td><td>最近批次 age / 条数 / 异常</td></tr>
+                  <tr><td>场景</td><td>纯新 / 正 / 负</td><td>机会池 scenario 字段</td><td>本批次分组计数</td></tr>
+                </tbody>
+              </table></div>
+            </details>`;
+        }
+
+        function renderEmailChannel() {
+          return `
+            <div class="notice notice--info">◈ 订阅竞品 Newsletter，解析主推位（Hero）与次推位。邮件主推 = 竞品流量倾斜意图，可在纯新款池勾选筛选。</div>
+            <div class="data-panel">
+              <div class="data-panel__header"><div><h3>本周竞品邮件拆解</h3><p>收件箱 at-radar@ · ${EMAIL_ROWS.length} 封命中</p></div>
+                <button type="button" class="btn btn--ghost btn--sm" data-go="pool">去纯新款勾选筛选</button>
+              </div>
+              <div class="table-wrap"><table class="data-table">
+                <thead><tr><th>品牌</th><th>邮件主题</th><th>收件市场</th><th>发送</th><th>主推商品</th><th>位序</th></tr></thead>
+                <tbody>
+                  ${EMAIL_ROWS.filter((r)=> state.market==="all" || r.market===state.market).map((r)=>`
+                    <tr>
+                      <td>${escapeHtml(r.brand)}</td>
+                      <td>${escapeHtml(r.subject)}</td>
+                      <td>${escapeHtml(r.market)}</td>
+                      <td>${escapeHtml(r.sent)}</td>
+                      <td>${escapeHtml(r.hero)}</td>
+                      <td><span class="tag tag--waiting">${escapeHtml(r.slot)}</span></td>
+                    </tr>`).join("")}
+                </tbody>
+              </table></div>
+              <p class="muted" style="padding:10px 14px;font-size:11px">※ 竞品对不同市场订阅列表可能推不同款；收件箱按市场分别注册。</p>
+            </div>`;
+        }
+
+        function renderSocialChannel() {
+          return `
+            <div class="notice notice--warn">⚠ 一期为运营人工录入。标记「翻车」的帖子会在负向改款与审批中高亮。</div>
+            <div class="data-panel">
+              <div class="data-panel__header">
+                <div><h3>社媒证据</h3><p>好评 / 翻车帖，挂到机会或方案</p></div>
+                <button type="button" class="btn btn--primary btn--sm" id="btn-add-social">＋ 录入证据</button>
+              </div>
+              <div class="table-wrap"><table class="data-table">
+                <thead><tr><th>平台</th><th>语气</th><th>摘要</th><th>关联</th><th>翻车</th></tr></thead>
+                <tbody>
+                  ${SOCIAL_ROWS.map((r)=>`
+                    <tr>
+                      <td>${escapeHtml(r.platform)}</td>
+                      <td>${escapeHtml(r.tone)}</td>
+                      <td>${escapeHtml(r.note)}</td>
+                      <td class="mono">${escapeHtml(r.linked || "—")}</td>
+                      <td>${r.viral ? '<span class="chip chip--warn">是</span>' : "否"}</td>
+                    </tr>`).join("")}
+                </tbody>
+              </table></div>
+            </div>`;
+        }
+
+        function renderMapping() {
+          return `
+            <div class="notice notice--info">◈ 属性字典层：竞品热卖属性榜与相似款匹配都依赖本表。映射缺一条，对应信号等于不存在。</div>
+            <div class="data-panel">
+              <div class="data-panel__header">
+                <div><h3>已生效 / 待确认映射</h3><p>内部标准叫法 ⇄ 竞品站外部叫法</p></div>
+                <button type="button" class="btn btn--primary btn--sm" id="btn-add-mapping">＋ 新增映射</button>
+              </div>
+              <div class="table-wrap"><table class="data-table">
+                <thead><tr><th>内部标准属性</th><th>竞品站叫法</th><th>来源</th><th>本批命中</th><th>状态</th><th></th></tr></thead>
+                <tbody>
+                  ${ATTR_MAP_ROWS.map((r,i)=>`
+                    <tr>
+                      <td>${escapeHtml(r.internal)}</td>
+                      <td>${escapeHtml(r.external)}</td>
+                      <td>${escapeHtml(r.source)}</td>
+                      <td>${r.hits}</td>
+                      <td><span class="tag ${r.status==="已生效"?"tag--success":"tag--waiting"}">${escapeHtml(r.status)}</span></td>
+                      <td>${r.status==="待确认"?`<button type="button" class="btn btn--ghost btn--sm" data-confirm-map="${i}">确认归类</button>`:""}</td>
+                    </tr>`).join("")}
+                </tbody>
+              </table></div>
+            </div>`;
+        }
+
+        function renderSitesConfig() {
+          const canWrite = state.role === "admin";
+          const rows = SITE_GROUPS.flatMap((g) => g.sites.map((s) => ({ ...s, line: g.line })));
+          return `
+            <div class="notice notice--info">◈ 站点主数据：品类线 + 主营市场。看数口径由左下角「市场」切换；此处改归属。${!canWrite ? "当前只读，切换到管理员身份可编辑。" : ""}</div>
+            <div class="data-panel">
+              <div class="data-panel__header"><div><h3>站点与市场配置</h3><p>当前品类上下文：${escapeHtml(state.categoryLine)}</p></div></div>
+              <div class="table-wrap"><table class="data-table">
+                <thead><tr><th>站点</th><th>品类线</th><th>主营市场</th><th>启用</th><th>链接</th></tr></thead>
+                <tbody>
+                  ${rows.map((s, idx) => `
+                    <tr>
+                      <td><strong>${escapeHtml(s.name)}</strong></td>
+                      <td>
+                        <select data-site-cfg-line="${escapeAttr(s.name)}" ${canWrite?"":"disabled"}>
+                          <option value="AT" ${s.line==="AT"?"selected":""}>AT</option>
+                          <option value="BD" ${s.line==="BD"?"selected":""}>BD</option>
+                        </select>
+                      </td>
+                      <td>
+                        <input data-site-cfg-mk="${escapeAttr(s.name)}" value="${escapeAttr((s.markets||[]).join(","))}" ${canWrite?"":"readonly"} placeholder="US,UK,AU">
+                      </td>
+                      <td><input type="checkbox" data-site-cfg-on="${escapeAttr(s.name)}" ${s.enabled!==false?"checked":""} ${canWrite?"":"disabled"}></td>
+                      <td class="muted" style="max-width:180px;overflow:hidden;text-overflow:ellipsis">${escapeHtml(s.url||"")}</td>
+                    </tr>`).join("")}
+                </tbody>
+              </table></div>
+              ${canWrite?'<div style="padding:12px 14px"><button type="button" class="btn btn--primary" id="btn-save-sites-cfg">保存配置</button></div>':""}
+            </div>`;
+        }
+
         function render() {
           renderNav();
           renderHeader();
+          syncRoleUI();
+          bindAccountMenu();
           syncShellChrome();
           const toggle = document.getElementById("sidebar-toggle");
           if (toggle)
@@ -3660,11 +4572,13 @@
               syncShellChrome();
             };
           const map = {
+            dashboard: renderDashboard,
             monitor: renderMonitor,
             pool: renderPool,
             scheme: renderScheme,
             ai: renderAi,
             approval: renderApproval,
+            mapping: renderMapping,
           };
           app.innerHTML = map[state.route]();
           bindFooter(app);
@@ -3685,11 +4599,21 @@
               });
             app.querySelectorAll("[data-site-check]").forEach((el) =>
               el.addEventListener("change", () => {
-                const all = sitesInLine(state.siteLine || "AT");
+                const all = sitesInLine(state.siteLine || state.categoryLine || "AT");
                 const checked = Array.from(app.querySelectorAll("[data-site-check]"))
                   .filter((x) => x.checked)
                   .map((x) => x.getAttribute("data-site-check"));
-                state.selectedSites = checked.length === all.length ? null : checked;
+                state.selectedSites = checked.length === 0 || checked.length === all.length ? null : checked;
+                render();
+              })
+            );
+            app.querySelectorAll("[data-platform-check]").forEach((el) =>
+              el.addEventListener("change", () => {
+                const all = AD_PLATFORMS.map((p) => p.value);
+                const checked = Array.from(app.querySelectorAll("[data-platform-check]"))
+                  .filter((x) => x.checked)
+                  .map((x) => x.getAttribute("data-platform-check"));
+                state.selectedPlatforms = checked.length === 0 || checked.length === all.length ? null : checked;
                 render();
               })
             );
@@ -3703,6 +4627,14 @@
                   shipsNow: "全部",
                   hasAd: "全部",
                   similar: "全部",
+                  fabric: "全部",
+                  silhouette: "全部",
+                  neckline: "全部",
+                  sleeve: "全部",
+                  length: "全部",
+                  color: "全部",
+                  pattern: "全部",
+                  listed: "全部",
                 };
                 state.siteLine = "AT";
                 state.selectedSites = null;
@@ -3734,6 +4666,16 @@
                 render();
               });
             });
+            app.querySelectorAll("[data-clear-filter]").forEach((b) =>
+              b.addEventListener("click", () => {
+                const k = b.getAttribute("data-clear-filter");
+                if (k === "activeSite") state.activeSite = "全部";
+                else if (k === "sites") state.selectedSites = null;
+                else if (k === "platforms") state.selectedPlatforms = null;
+                else if (state.filters[k] != null) state.filters[k] = "全部";
+                render();
+              })
+            );
             const reset = app.querySelector("#btn-reset-f");
             if (reset)
               reset.onclick = () => {
@@ -3744,8 +4686,18 @@
                   shipsNow: "全部",
                   hasAd: "全部",
                   similar: "全部",
+                  fabric: "全部",
+                  silhouette: "全部",
+                  neckline: "全部",
+                  sleeve: "全部",
+                  length: "全部",
+                  color: "全部",
+                  pattern: "全部",
+                  listed: "全部",
                 };
                 state.activeSite = "全部";
+                state.selectedSites = null;
+                state.selectedPlatforms = null;
                 render();
               };
             const checkAll = app.querySelector("#check-all");
@@ -3875,6 +4827,7 @@
                 state.filters.week = "2026-W30";
                 state.filters.category = "全部";
                 state.internalOppFilter = "all";
+                resetDesignFilters();
                 render();
               };
             const checkAllInternal = app.querySelector("#check-all-internal");
@@ -3945,10 +4898,29 @@
                 e.stopPropagation();
                 state.selectedOppId = b.getAttribute("data-opp-ai");
                 state.scheme = null;
-                state.aiAnalyzed = false;
+                state.aiAnalyzed = true;
                 state.rejectReason = "";
-                setRoute("ai");
-                showToast("已进入 AI选款分析 · " + oppCode(selectedOpp()));
+                setRoute("scheme");
+                showToast("已打开方案 · 右侧 AI 分析 · " + oppCode(selectedOpp()));
+              })
+            );
+            app.querySelectorAll("[data-pool-sort]").forEach((b) =>
+              b.addEventListener("click", () => {
+                state.poolSort = b.getAttribute("data-pool-sort");
+                render();
+              })
+            );
+            const emailOnly = app.querySelector("#pool-email-only");
+            if (emailOnly)
+              emailOnly.addEventListener("change", () => {
+                state.poolEmailOnly = emailOnly.checked;
+                render();
+              });
+            app.querySelectorAll("[data-attr-filter]").forEach((row) =>
+              row.addEventListener("click", () => {
+                const v = row.getAttribute("data-attr-filter");
+                state.attrFilter = state.attrFilter === v ? null : v;
+                render();
               })
             );
             app.querySelectorAll("[data-opp-scheme]").forEach((b) =>
@@ -3956,6 +4928,7 @@
                 e.stopPropagation();
                 state.selectedOppId = b.getAttribute("data-opp-scheme");
                 state.scheme = null;
+                state.aiAnalyzed = true;
                 state.rejectReason = "";
                 setRoute("scheme");
                 showToast("已根据选品管理机会自动填齐方案字段");
@@ -3963,23 +4936,8 @@
             );
           }
 
-          if (state.route === "ai") {
-            const oppSel = app.querySelector("#ai-opp-select");
-            if (oppSel)
-              oppSel.addEventListener("change", () => {
-                state.selectedOppId = oppSel.value;
-                state.scheme = null;
-                state.aiAnalyzed = false;
-                render();
-              });
-            const startAi = app.querySelector("#btn-start-ai");
-            if (startAi)
-              startAi.onclick = () => {
-                ensureScheme();
-                state.aiAnalyzed = true;
-                showToast("分析完成 · " + oppCode(selectedOpp()));
-                render();
-              };
+          if (state.route === "scheme") {
+            bindSchemeFields();
             app.querySelectorAll("[data-ai-jump]").forEach((a) =>
               a.addEventListener("click", (e) => {
                 e.preventDefault();
@@ -3990,20 +4948,7 @@
                 showToast("已跳转监控报告 · " + (channelMeta(tab).label || tab));
               })
             );
-            const nextScheme = app.querySelector("[data-next='scheme']");
-            if (nextScheme)
-              nextScheme.onclick = () => {
-                if (!state.aiAnalyzed) {
-                  showToast("请先点击「开始分析」");
-                  return;
-                }
-                ensureScheme();
-                setRoute("scheme");
-                showToast("已带入 AI 结论，进入方案编辑");
-              };
           }
-
-          if (state.route === "scheme") bindSchemeFields();
 
           if (state.route === "approval") {
             app.querySelectorAll("[data-go]").forEach((b) =>
@@ -4013,8 +4958,22 @@
             if (viewScheme)
               viewScheme.onclick = () => {
                 state.schemeReviewOpen = true;
+                state.aiAnalyzed = true;
                 render();
               };
+            if (state.schemeReviewOpen) {
+              bindSchemeFields();
+              app.querySelectorAll("#scheme-review-mask [data-ai-jump]").forEach((a) =>
+                a.addEventListener("click", (e) => {
+                  e.preventDefault();
+                  const tab = a.getAttribute("data-ai-jump");
+                  if (tab) state.mcTab = tab;
+                  state.schemeReviewOpen = false;
+                  state.monitorExpanded = true;
+                  setRoute("monitor");
+                })
+              );
+            }
             const submitLead = app.querySelector("#btn-submit-lead");
             if (submitLead)
               submitLead.onclick = () => {
@@ -4109,34 +5068,172 @@
               showToast("批注已保存");
               render();
             };
+
+          // scheme page AI help/params (right rail)
+          const helpBtn2 = app.querySelector("#hdr-ai-help");
+          if (helpBtn2) helpBtn2.onclick = () => { state.aiHelpOpen = true; render(); };
+          const paramsBtn2 = app.querySelector("#hdr-ai-params");
+          if (paramsBtn2) paramsBtn2.onclick = () => { state.aiParamsOpen = true; render(); };
+
+          const addSocial = app.querySelector("#btn-add-social");
+          if (addSocial) addSocial.onclick = () => showToast("Demo：打开社媒证据录入表单");
+          const addMap = app.querySelector("#btn-add-mapping");
+          if (addMap) addMap.onclick = () => showToast("Demo：新增映射（选内部属性 → 填外部叫法 → 生效）");
+          app.querySelectorAll("[data-confirm-map]").forEach((b) =>
+            b.addEventListener("click", () => {
+              const i = Number(b.getAttribute("data-confirm-map"));
+              if (ATTR_MAP_ROWS[i]) ATTR_MAP_ROWS[i].status = "已生效";
+              showToast("已确认映射，下批爬取生效");
+              render();
+            })
+          );
+          app.querySelectorAll("[data-receipt-toggle]").forEach((b) =>
+            b.addEventListener("click", () => {
+              const id = b.getAttribute("data-receipt-toggle");
+              state.receiptDetailId = state.receiptDetailId === id ? null : id;
+              render();
+            })
+          );
+          app.querySelectorAll("[data-retry-sync]").forEach((b) =>
+            b.addEventListener("click", () => {
+              const id = b.getAttribute("data-retry-sync");
+              const row = SYNC_RECEIPTS.find((r) => r.schemeId === id);
+              if (row) {
+                row.syncStatus = "Sync_Pending";
+                row.retries += 1;
+                row.updated = "刚刚";
+                const syncStep = (row.progress || []).find((p) => p.key === "sync");
+                if (syncStep) { syncStep.state = "active"; syncStep.detail = "同步中 · 已重试 " + row.retries + " 次"; syncStep.at = "刚刚"; }
+              }
+              showToast("已触发手动重试 · " + id);
+              render();
+            })
+          );
+          const saveSites = app.querySelector("#btn-save-sites-cfg");
+          if (saveSites)
+            saveSites.onclick = () => {
+              app.querySelectorAll("[data-site-cfg-mk]").forEach((inp) => {
+                const name = inp.getAttribute("data-site-cfg-mk");
+                const mk = inp.value.split(/[,，\s]+/).map((x) => x.trim()).filter(Boolean);
+                SITE_GROUPS.forEach((g) => {
+                  const s = g.sites.find((x) => x.name === name);
+                  if (s) s.markets = mk;
+                });
+              });
+              app.querySelectorAll("[data-site-cfg-on]").forEach((inp) => {
+                const name = inp.getAttribute("data-site-cfg-on");
+                SITE_GROUPS.forEach((g) => {
+                  const s = g.sites.find((x) => x.name === name);
+                  if (s) s.enabled = inp.checked;
+                });
+              });
+              showToast("站点与市场配置已保存（Demo）");
+              render();
+            };
+          app.querySelectorAll("[data-go]").forEach((b) =>
+            b.addEventListener("click", () => setRoute(b.getAttribute("data-go")))
+          );
+        }
+
+        function roleLabel(role) {
+          return role === "admin" ? "管理员" : role === "lead" ? "品类负责人" : "品类运营";
         }
 
         function syncRoleUI() {
-          document.querySelectorAll(".role-switch button").forEach((b) => {
+          document.querySelectorAll("#account-popover [data-role]").forEach((b) => {
             b.classList.toggle("is-active", b.getAttribute("data-role") === state.role);
           });
-          document.getElementById("user-avatar").textContent = state.role === "ops" ? "运" : "负";
-          document.getElementById("user-name").textContent =
-            state.role === "ops" ? "品类运营" : "品类负责人";
+          const av = document.getElementById("user-avatar");
+          const nm = document.getElementById("user-name");
+          const ctx = document.getElementById("user-context");
+          if (av) av.textContent = state.role === "admin" ? "管" : state.role === "lead" ? "负" : "运";
+          if (nm) nm.textContent = roleLabel(state.role);
+          const mk = state.market === "all" ? "全部市场" : state.market;
+          if (ctx) ctx.textContent = `${state.categoryLine} · ${mk}`;
+          const catSel = document.getElementById("account-category");
+          const mkSel = document.getElementById("account-market");
+          if (catSel) {
+            catSel.value = state.categoryLine;
+            catSel.disabled = state.role !== "admin";
+          }
+          if (mkSel) mkSel.value = state.market;
+          const pop = document.getElementById("account-popover");
+          const tog = document.getElementById("account-toggle");
+          if (pop) pop.hidden = !state.accountOpen;
+          if (tog) tog.setAttribute("aria-expanded", state.accountOpen ? "true" : "false");
+          const batch = document.getElementById("batch-label");
+          if (batch) batch.textContent = `批次 2026-W30 · ${state.categoryLine} 轨 · ${mk}`;
         }
 
-        document.querySelectorAll(".role-switch button").forEach((b) => {
-          b.addEventListener("click", () => {
-            state.role = b.getAttribute("data-role");
-            syncRoleUI();
-            render();
+        function bindAccountMenu() {
+          const tog = document.getElementById("account-toggle");
+          if (tog) {
+            tog.onclick = (e) => {
+              e.stopPropagation();
+              state.accountOpen = !state.accountOpen;
+              syncRoleUI();
+            };
+          }
+          document.querySelectorAll("#account-popover [data-role]").forEach((b) => {
+            b.onclick = (e) => {
+              e.stopPropagation();
+              state.role = b.getAttribute("data-role");
+              if (state.role !== "admin" && state.categoryLine !== "AT") {
+                state.categoryLine = "AT";
+                state.siteLine = "AT";
+                showToast("非管理员已锁定品类为 AT");
+              }
+              syncRoleUI();
+              render();
+            };
           });
+          const catSel = document.getElementById("account-category");
+          if (catSel) {
+            catSel.onchange = () => {
+              if (state.role !== "admin") return;
+              if (catSel.value !== "AT") {
+                showToast("该品类接入中：平台架构支持多品类，数据源标定后即可开通");
+                catSel.value = "AT";
+                state.categoryLine = "AT";
+              } else {
+                state.categoryLine = catSel.value;
+                state.siteLine = catSel.value;
+              }
+              syncRoleUI();
+              render();
+            };
+          }
+          const mkSel = document.getElementById("account-market");
+          if (mkSel) {
+            mkSel.onchange = () => {
+              state.market = mkSel.value;
+              showToast(state.market === "all" ? "已切换到全部市场" : "已切换到 " + state.market + " 市场口径");
+              syncRoleUI();
+              render();
+            };
+          }
+        }
+
+        document.addEventListener("click", (e) => {
+          const menu = document.getElementById("account-menu");
+          if (state.accountOpen && menu && !menu.contains(e.target)) {
+            state.accountOpen = false;
+            syncRoleUI();
+          }
         });
 
         function boot() {
-          let id = (location.hash || "#monitor").replace("#", "");
-          if (id === "overview" || id === "sources") id = "monitor";
-          if (!ROUTES.some((r) => r.id === id)) id = "monitor";
+          let id = (location.hash || "#dashboard").replace("#", "");
+          if (id === "overview" || id === "sources") id = "dashboard";
+          if (id === "ai") id = "scheme";
+          if (id === "sitesConfig") id = "dashboard";
+          if (!ROUTES.some((r) => r.id === id)) id = "dashboard";
           state.route = id;
           render();
         }
 
         window.addEventListener("hashchange", boot);
+        bindAccountMenu();
         syncRoleUI();
         boot();
       })();
