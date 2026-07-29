@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>选品智能化平台 · Merchandising Intelligence</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar" aria-label="主导航">
+        <div class="brand">
+          <div class="brand-mark">MI</div>
+          <div class="brand-text">
+            <strong>选品智能化平台</strong>
+            <span>Merchandising Intelligence</span>
+          </div>
+        </div>
+
+        <nav class="nav" id="side-nav"></nav>
+
+        <div class="sidebar-footer">
+          <div class="sync-line">
+            <span class="sync-dot"></span>
+            <span>数据就绪 · Demo 骨架</span>
+          </div>
+          <div class="user-mini">
+            <div class="user-mini__avatar">S</div>
+            <div>
+              <strong>Shelly</strong>
+              <span>品类运营 · BD</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <div class="main">
+        <header class="topbar">
+          <div class="topbar-left">
+            <p class="crumb" id="page-crumb">分析洞察 / 机会池</p>
+            <h1 id="page-title">机会池</h1>
+            <p class="page-desc" id="page-desc">竞品网站 · 产品数据 · 社媒舆情三信号融合主入口 · 形成可执行选品方案</p>
+          </div>
+          <div class="topbar-right" id="topbar-right">
+            <div class="global-filters">
+              <select aria-label="周次">
+                <option>2026-W27</option>
+                <option>2026-W26</option>
+              </select>
+              <select aria-label="业务线">
+                <option>BD</option>
+                <option>AT</option>
+              </select>
+              <button type="button" class="btn btn-secondary" data-toast="refresh">刷新</button>
+            </div>
+          </div>
+        </header>
+
+        <div class="content-shell" id="content-shell">
+          <main class="content" id="page-content">
+            <!-- filled by app.js -->
+          </main>
+
+          <aside class="inspector is-collapsed" id="inspector" aria-label="详情检视">
+            <div class="inspector-head">
+              <div>
+                <h2>详情侧栏</h2>
+                <span class="muted" id="inspector-sub">点击表格行或卡片展开</span>
+              </div>
+              <button type="button" class="btn-icon" id="inspector-close" aria-label="收起">×</button>
+            </div>
+            <div class="inspector-body" id="inspector-body">
+              <div class="empty-panel">
+                <strong>暂无选中对象</strong>
+                <p>在机会池等页面选中一行后，将在此展示编号、状态、建议动作、字段与操作日志。</p>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-host" id="toast-host" aria-live="polite"></div>
+    <script src="./voc0722.js"></script>
+    <script src="./internal0722.js"></script>
+    <script src="./proposal0722.js"></script>
+    <script src="./listing0722.js"></script>
+    <script src="./app0722.js"></script>
+    <script src="./pages0722.js"></script>
+  </body>
+</html>

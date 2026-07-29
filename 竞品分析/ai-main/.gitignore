@@ -1,0 +1,6 @@
+.DS_Store
+Thumbs.db
+
+# Editor / local metadata
+.idea/
+.vscode/

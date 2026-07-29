@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI自动刊登系统</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">AI</div>
+          <div class="brand-copy">
+            <strong>AI自动刊登系统</strong>
+            <span>Auto Listing Workspace</span>
+          </div>
+        </div>
+
+        <div class="sidebar-group">
+          <p class="sidebar-label">页面导航</p>
+          <nav class="sidenav">
+            <button class="sidenav-link is-active" data-route="dashboard">
+              <span class="sidenav-order">01</span>
+              <span class="sidenav-text">
+                <strong>任务列表</strong>
+                <span>查看、筛选并处理刊登任务</span>
+              </span>
+            </button>
+            <button class="sidenav-link" data-route="new-task">
+              <span class="sidenav-order">02</span>
+              <span class="sidenav-text">
+                <strong>新建任务</strong>
+                <span>录入基础信息并上传素材包</span>
+              </span>
+            </button>
+            <button class="sidenav-link" data-route="review">
+              <span class="sidenav-order">03</span>
+              <span class="sidenav-text">
+                <strong>AI审核页</strong>
+                <span>左图右表单完成双人审核</span>
+              </span>
+            </button>
+            <button class="sidenav-link" data-route="users">
+              <span class="sidenav-order">04</span>
+              <span class="sidenav-text">
+                <strong>用户管理</strong>
+                <span>账号、角色与状态治理</span>
+              </span>
+            </button>
+          </nav>
+        </div>
+      </aside>
+
+      <div class="main-shell">
+        <header class="topbar">
+          <div class="topbar-copy">
+            <p class="eyebrow">MVP Prototype</p>
+            <h1 id="page-title">刊登任务</h1>
+            <p id="page-description">
+              用统一的任务流、审核流和留痕结构承接 AI 自动刊登闭环。
+            </p>
+          </div>
+          <div class="hero-actions">
+            <div class="user-chip">
+              <div class="user-chip__avatar">L</div>
+              <div class="user-chip__meta">
+                <strong>Lucy</strong>
+                <span>上海运营</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main class="workspace">
+          <section id="app"></section>
+        </main>
+      </div>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

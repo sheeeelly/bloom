@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Bloom · 智能选品闭环 MVP 流程图</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;
+  background:#4b4b4b;display:flex;justify-content:center;padding:30px;
+}
+.poster{
+  width:1120px;background:#f2f0eb;border-radius:6px;padding:34px 38px 26px;
+  color:#111;box-shadow:0 10px 40px rgba(0,0,0,.4);
+}
+h1{
+  text-align:center;font-size:40px;font-weight:900;letter-spacing:2px;margin-bottom:26px;
+}
+.row{display:flex;align-items:stretch;gap:0;position:relative}
+.phase-band{display:flex;margin-bottom:10px}
+.band{
+  color:#fff;font-size:17px;font-weight:800;padding:5px 26px;border-radius:8px;
+  letter-spacing:2px;
+}
+.band.blue{background:#1e5bb8}
+.band.brown{background:#a3782a}
+.spacer{flex:1}
+
+.card{
+  background:#fff;border-radius:10px;padding:14px 14px 12px;flex:1;min-width:0;
+  box-shadow:0 2px 8px rgba(0,0,0,.09);display:flex;flex-direction:column;
+}
+.card h3{font-size:16.5px;font-weight:800;margin-bottom:8px;white-space:nowrap}
+.card h3 .letter{margin-right:4px}
+.card ul{list-style:none;flex:1;margin-bottom:10px}
+.card li{
+  font-size:12px;line-height:1.5;margin-bottom:5px;padding-left:12px;position:relative;color:#222;
+}
+.card li::before{content:"•";position:absolute;left:2px;font-weight:900}
+.out{
+  background:#e6e4df;border-radius:7px;text-align:center;font-size:12.5px;font-weight:700;
+  padding:6px 4px;color:#333;white-space:nowrap;
+}
+.arrow{
+  align-self:center;width:34px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+}
+.arrow svg{width:22px;height:22px;fill:#8f8d88}
+.arrow.rev svg{transform:rotate(180deg)}
+
+.decision-strip{
+  background:#a3782a;color:#fff;writing-mode:vertical-lr;text-align:center;
+  font-size:14px;font-weight:800;letter-spacing:5px;border-radius:8px;
+  padding:10px 4px;margin:0 6px;flex-shrink:0;display:flex;align-items:center;
+}
+
+/* 右侧下折箭头 */
+.down-arrow{
+  position:absolute;right:34px;top:100%;height:52px;width:40px;
+  display:flex;justify-content:center;
+}
+.down-arrow svg{width:30px;height:52px;fill:#8f8d88}
+
+.legend{
+  display:flex;justify-content:center;align-items:center;gap:22px;margin-top:24px;
+  font-size:14px;font-weight:700;
+}
+.legend .sq{width:30px;height:16px;border-radius:4px;display:inline-block;vertical-align:-2px;margin-right:7px}
+.legend .divider{color:#b7b4ad;font-weight:400}
+.gap{height:58px}
+</style>
+</head>
+<body>
+<div class="poster">
+  <h1>从竞品信号到上新落地：智能选品闭环MVP</h1>
+
+  <!-- ===== 上排：01 信号采集 + 02 场景与评估 ===== -->
+  <div class="phase-band">
+    <div style="width:120px"></div>
+    <div class="band blue">01 每周盯竞品</div>
+    <div class="spacer"></div>
+    <div class="band brown">02 判断跟法与算账</div>
+    <div style="width:150px"></div>
+  </div>
+
+  <div class="row" id="toprow">
+    <div class="card">
+      <h3><span class="letter">A</span>每周例行盯盘</h3>
+      <ul>
+        <li>每周自动跑一轮竞品盘点</li>
+        <li>只看礼服（AT）品类</li>
+        <li>数据不新鲜自动提醒补采</li>
+        <li>无需人工逛站，解放运营</li>
+      </ul>
+      <div class="out">产出：本周情报批次</div>
+    </div>
+    <div class="arrow"><svg viewBox="0 0 24 24"><path d="M8 4l8 8-8 8V4z"/></svg></div>
+    <div class="card">
+      <h3><span class="letter">B</span>五路情报来源</h3>
+      <ul>
+        <li>竞品官网：上了什么新款、排多前</li>
+        <li>竞品花钱在推哪些款（广告）</li>
+        <li>竞品邮件主推哪些款</li>
+        <li>社媒口碑 + 自家同类款战绩</li>
+      </ul>
+      <div class="out">产出：本周竞品情报</div>
+    </div>
+    <div class="arrow"><svg viewBox="0 0 24 24"><path d="M8 4l8 8-8 8V4z"/></svg></div>
+    <div class="card">
+      <h3><span class="letter">C</span>挑出值得看的款</h3>
+      <ul>
+        <li>只留「刚上新且卖得靠前」的款</li>
+        <li>广告 + 邮件都在推 = 强信号</li>
+        <li>同款同色自动去重</li>
+        <li>按时间排的站不冒充热销</li>
+      </ul>
+      <div class="out">产出：本周找款机会清单</div>
+    </div>
+    <div class="arrow"><svg viewBox="0 0 24 24"><path d="M8 4l8 8-8 8V4z"/></svg></div>
+    <div class="card">
+      <h3><span class="letter">D</span>判断怎么跟</h3>
+      <ul>
+        <li>纯新款：竞品爆款直接跟</li>
+        <li>正向改款：自家热销款＋竞品卖爆的设计点</li>
+        <li>负向改款：把被用户吐槽的款修好</li>
+      </ul>
+      <div class="out">产出：明确的跟款思路</div>
+    </div>
+    <div class="arrow"><svg viewBox="0 0 24 24"><path d="M8 4l8 8-8 8V4z"/></svg></div>
+    <div class="card">
+      <h3><span class="letter">E</span>算账：值不值得做</h3>
+      <ul>
+        <li>按成本算售价，和竞品比价格优势</li>
+        <li>查面料库存：做不做得出来</li>
+        <li>自家类似款卖得好不好、退货高不高</li>
+        <li>价格没优势 / 做不出来 → 提前拦下</li>
+      </ul>
+      <div class="out">产出：值得做的机会</div>
+    </div>
+    <div class="down-arrow"><svg viewBox="0 0 30 52"><path d="M11 0h8v30h7L15 50 4 30h7V0z"/></svg></div>
+  </div>
+
+  <div class="gap"></div>
+
+  <!-- ===== 下排：04 写入与回流 + 03 AI 生成与审批（自右向左） ===== -->
+  <div class="phase-band">
+    <div style="width:60px"></div>
+    <div class="band brown">04 落地与复盘</div>
+    <div class="spacer"></div>
+    <div class="band blue">03 出方案与拍板</div>
+    <div style="width:130px"></div>
+  </div>
+
+  <div class="row">
+    <div class="card">
+      <h3><span class="letter">I</span>复盘：选得准不准</h3>
+      <ul>
+        <li>上架后跟踪 30/60 天卖了多少</li>
+        <li>系统推的款单独算功劳（增量）</li>
+        <li>驳回原因用来改进 AI 和规则</li>
+        <li>每周看：漏没漏 · 省了多少时间</li>
+      </ul>
+      <div class="out">产出：下一轮更聪明</div>
+    </div>
+    <div class="arrow rev"><svg viewBox="0 0 24 24"><path d="M8 4l8 8-8 8V4z"/></svg></div>
+    <div class="card">
+      <h3><span class="letter">H</span>进选款、去打版</h3>
+      <ul>
+        <li>通过后自动进选款系统，零手工</li>
+        <li>自动打上「系统推荐」标记</li>
+        <li>同步失败自动重试并提醒</li>
+        <li>回执可查：哪款、何时、谁批的</li>
+      </ul>
+      <div class="out">产出：选款提案 + 打版排期</div>
+    </div>
+    <div class="arrow rev"><svg viewBox="0 0 24 24"><path d="M8 4l8 8-8 8V4z"/></svg></div>
+    <div class="decision-strip">决策｜审批</div>
+    <div class="card">
+      <h3><span class="letter">G</span>AI 把关＋负责人拍板</h3>
+      <ul>
+        <li>AI 给结论：推 / 谨慎 / 接单做 / 不推</li>
+        <li>缺什么证据直说，不报喜藏忧</li>
+        <li>运营可坚持己见，但要留痕</li>
+        <li>负责人一票终审，驳回必写原因</li>
+      </ul>
+      <div class="out">产出：拍板通过的方案</div>
+    </div>
+    <div class="arrow rev"><svg viewBox="0 0 24 24"><path d="M8 4l8 8-8 8V4z"/></svg></div>
+    <div class="card">
+      <h3><span class="letter">F</span>一键起方案</h3>
+      <ul>
+        <li>点一下机会，图、价、证据自动带出</li>
+        <li>说清楚：改哪里、用什么料、卖多少钱</li>
+        <li>现货还是接单做（MTO）提前定</li>
+        <li>信息搜集+成稿时间省一半</li>
+      </ul>
+      <div class="out">产出：一份说得清的方案</div>
+    </div>
+  </div>
+
+  <!-- ===== 图例 ===== -->
+  <div class="legend">
+    <span><span class="sq" style="background:#1e5bb8"></span>蓝方块：处理节点</span>
+    <span class="divider">｜</span>
+    <span><span class="sq" style="background:#a3782a"></span>棕方块：决策/审批节点</span>
+    <span class="divider">｜</span>
+    <span><span class="sq" style="background:#e6e4df"></span>灰条：产出/结果</span>
+  </div>
+</div>
+</body>
+</html>

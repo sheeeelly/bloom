@@ -1,0 +1,26 @@
+# Dependencies / caches
+node_modules/
+.npm/
+.cache/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs & temp
+*.log
+tmp/
+temp/
+dist/
+build/
+*.local

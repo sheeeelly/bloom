@@ -1,0 +1,49 @@
+# macOS / Windows
+.DS_Store
+Thumbs.db
+~$*
+*.tmp
+
+# Python / Node runtimes (anywhere)
+.venv/
+venv/
+**/.venv/
+**/venv/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+node_modules/
+**/node_modules/
+*.exe
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+*.pem
+credentials.json
+**/secrets/**
+**/*.bak
+
+# Editor / local
+.cursor/
+.idea/
+.vscode/
+*.swp
+
+# Archives & local dumps
+*.zip
+_codex_round*.jsonl
+_codex_round*.err
+_codex_verdict_*.txt
+_codex_review_prompt.txt
+
+# Competitor scrape bulky outputs / caches (keep source code)
+竞品分析/competitor_project_optimized_clean/**/output/
+竞品分析/competitor_project_optimized_clean/**/runtime/
+竞品分析/competitor_project_optimized_clean/**/playwright/
+
+# nested repo metadata (macOS may lock these objects)
+selection-intelligence-platform/.git/

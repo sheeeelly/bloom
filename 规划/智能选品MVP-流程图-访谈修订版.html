@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>智能选品 MVP · 流程图（访谈修订）</title>
+  <style>
+    :root {
+      --ink: #1a2332;
+      --muted: #5a6577;
+      --line: #c5ced9;
+      --blue: #3d6b8c;
+      --blue-bg: #e8f0f5;
+      --brown: #8b6914;
+      --brown-bg: #f5efd9;
+      --card: #fff;
+      --out: #eef1f5;
+      --soft: #f7f8fa;
+      --ok: #2d6a4f;
+      --weak: #9a7b2f;
+      --no: #8b4557;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 28px 24px 48px;
+      font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background: var(--soft);
+      line-height: 1.45;
+    }
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 22px;
+      font-weight: 650;
+      letter-spacing: 0.02em;
+    }
+    .sub {
+      margin: 0 0 22px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .flow {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px 20px;
+    }
+    .stage {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px 14px 12px;
+      position: relative;
+    }
+    .stage-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .stage-tag .num {
+      font-variant-numeric: tabular-nums;
+      opacity: 0.85;
+    }
+    .tag-blue { background: var(--blue-bg); color: var(--blue); }
+    .tag-brown { background: var(--brown-bg); color: var(--brown); }
+    .cards {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .cards-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 11px 8px;
+      background: #fff;
+      min-height: 0;
+    }
+    .card.proc { border-left: 3px solid var(--blue); }
+    .card.decide { border-left: 3px solid var(--brown); }
+    .card h3 {
+      margin: 0 0 6px;
+      font-size: 13.5px;
+      font-weight: 650;
+    }
+    .card ul {
+      margin: 0;
+      padding-left: 16px;
+      font-size: 11.5px;
+      color: var(--muted);
+    }
+    .card li { margin: 2px 0; }
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 0 5px;
+      border-radius: 3px;
+      margin-right: 4px;
+      vertical-align: 1px;
+    }
+    .b-ok { background: #d8f3e4; color: var(--ok); }
+    .b-weak { background: #f5edd0; color: var(--weak); }
+    .b-no { background: #f5e0e6; color: var(--no); }
+    .out {
+      margin-top: 8px;
+      background: var(--out);
+      border-radius: 4px;
+      padding: 5px 8px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .out strong { color: var(--ink); font-weight: 600; }
+    .arrow-hint {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      padding: 2px 0 0;
+      letter-spacing: 0.04em;
+    }
+    .legend {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px 28px;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 12px 14px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 1px solid var(--line);
+    }
+    .swatch.blue { background: var(--blue-bg); border-color: var(--blue); }
+    .swatch.brown { background: var(--brown-bg); border-color: var(--brown); }
+    .swatch.grey { background: var(--out); }
+    .note {
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 10px 12px;
+      border-left: 3px solid var(--line);
+      background: var(--card);
+    }
+    @media (max-width: 860px) {
+      .flow { grid-template-columns: 1fr; }
+      .cards-row { grid-template-columns: 1fr; }
+    }
+    @media print {
+      body { background: #fff; padding: 12px; }
+      .stage { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>智能选品 MVP</h1>
+    <p class="sub">访谈修订版 · AT 试点 · 爬取 → 机会 → AI 评估 → 审批回流 · 本期不做自动成本预估</p>
+
+    <div class="flow">
+      <!-- 01 -->
+      <section class="stage">
+        <div class="stage-tag tag-blue"><span class="num">01</span> 信息采集 · 爬虫爬哪些</div>
+        <div class="cards">
+          <div class="cards-row">
+            <div class="card proc">
+              <h3>A. 竞品站 AT 轨（雷达）</h3>
+              <ul>
+                <li><span class="badge b-ok">本期</span>默认周频 · 只认 <code>source_line=atelier</code></li>
+                <li>商品卡：图 / 标题 / 价 / 评价 / 链接 / 颜色</li>
+                <li>上新·下架 · 列表序 <code>list_rank</code></li>
+                <li><span class="badge b-weak">增强</span>Ships Now / 现货标记（有则抓）</li>
+              </ul>
+              <div class="out">产出：<strong>上新表 ⋈ 列表排序表</strong></div>
+            </div>
+            <div class="card proc">
+              <h3>B. 扩展信号采集</h3>
+              <ul>
+                <li><span class="badge b-ok">本期</span>AZ 相似款历史销量（内部查）</li>
+                <li><span class="badge b-weak">人工/爬</span>Ins / 社媒 · 流行趋势与主推</li>
+                <li><span class="badge b-weak">人工/爬</span>PipiAds · 广告播放 / 点击·互动</li>
+                <li>监控名单 4–8 站 · 可按季切换</li>
+              </ul>
+              <div class="out">产出：<strong>信息集合（站内 + 传播 + 内部）</strong></div>
+            </div>
+          </div>
+        </div>
+        <div class="arrow-hint">↓ 入库批次 · 机会定义</div>
+      </section>
+
+      <!-- 02 -->
+      <section class="stage">
+        <div class="stage-tag tag-brown"><span class="num">02</span> 找款与方案 · 展示哪些得机会</div>
+        <div class="cards">
+          <div class="card decide">
+            <h3>C. 上新 × 流行（主池自动）</h3>
+            <ul>
+              <li>可操作机会 ≈ <strong>竞品上新 ∩ 列表/热销靠前（list_rank）</strong></li>
+              <li>门禁：与 AZ 已有极相似 → <strong>不进「可上新」</strong>，进「撞款·诊断存量」</li>
+            </ul>
+            <div class="out">产出：<strong>机会候选</strong></div>
+          </div>
+          <div class="cards-row">
+            <div class="card proc">
+              <h3>D. 机会池展示块</h3>
+              <ul>
+                <li>图 / 标题 / 价 / 站 / 链接 → 认款</li>
+                <li>上新类型、首次出现 → 新机会</li>
+                <li><code>list_rank</code> + sales_proxy? → 站内流行度</li>
+                <li>颜色数 / 在售色 → 配色机会</li>
+                <li>Ships Now → 主推强弱</li>
+                <li>AZ 相似款 + 销量摘要 → 撞款 or 跟款</li>
+              </ul>
+              <div class="out">产出：<strong>可增删机会池</strong></div>
+            </div>
+            <div class="card proc">
+              <h3>E. 机会类型 → 方案入口</h3>
+              <ul>
+                <li><strong>跟款上新</strong>：热卖×上新，不撞自有</li>
+                <li><strong>撞款·诊断</strong>：极相似 → Pass 上新</li>
+                <li><strong>改一维迭代</strong>：自有爆款改面料/版型/长度（UI 可后置）</li>
+                <li><strong>社媒主推 / 广告热</strong>：传播侧补强入口</li>
+              </ul>
+              <div class="out">产出：<strong>方案草稿</strong>（参考款 · 改款点 · 现货/MTO）</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 底行与参考图一致：左 04 审批 · 右 03 AI -->
+      <section class="stage" style="order: 3;">
+        <div class="stage-tag tag-brown"><span class="num">04</span> 审批与回流</div>
+        <div class="cards">
+          <div class="cards-row">
+            <div class="card decide">
+              <h3>H. 负责人审批</h3>
+              <ul>
+                <li>通过 / 驳回（驳回必填原因）</li>
+                <li>高亮：撞款诊断、改款建议、库存 unknown、成本未评估</li>
+                <li>审批页不展示 generation_source 推荐文案</li>
+              </ul>
+              <div class="out">产出：<strong>负责人审批结果</strong></div>
+            </div>
+            <div class="card proc">
+              <h3>I. 写入选款与指标</h3>
+              <ul>
+                <li>同步选款 · <code>generation_source=system_hub_at</code></li>
+                <li>成稿时长埋点 · 上架后 GMV 关联（轻量）</li>
+              </ul>
+              <div class="out">产出：<strong>选款提案 + 指标回流</strong></div>
+            </div>
+          </div>
+        </div>
+        <div class="arrow-hint">← 从 AI 结论流入</div>
+      </section>
+
+      <section class="stage" style="order: 4;">
+        <div class="stage-tag tag-blue"><span class="num">03</span> AI 如何评估方案质量</div>
+        <div class="cards">
+          <div class="card proc">
+            <h3>F. 成本与可生产性（本期降级）</h3>
+            <ul>
+              <li><span class="badge b-no">不做</span>自动成本预估 / BOM×倍率算价优势</li>
+              <li>原因：面辅料库未就绪 · 映射 Owner 未定 · 避免假「有优势」</li>
+              <li>可生产性：有库存代理则标；运营找款弱依赖</li>
+            </ul>
+            <div class="out">产出：<strong>成本未评估</strong> + 可生产性 ok/risky/<strong>unknown</strong></div>
+          </div>
+          <div class="card decide">
+            <h3>G. AI 审核（固定骨架）</h3>
+            <ul>
+              <li>结论先行 · 枚举：<strong>建议推 / 谨慎·MTO / 不建议推</strong></li>
+              <li><strong>需求/流行</strong>：上新×列表序；可选 Ships Now、社媒/广告 → 缺数 <code>unknown</code>，不装「爆」</li>
+              <li><strong>竞争/撞款</strong>：极相似 → 不建议上新，改诊断（价/元素/流量）</li>
+              <li><strong>利润/成本</strong>：明确「成本未评估」，不伪装优势</li>
+              <li><strong>差异化/改款</strong>：保留什么 + 只改一维；无证据不编</li>
+              <li><strong>可生产性</strong>：unknown 可过，审批高亮</li>
+            </ul>
+            <div class="out">产出：<strong>AI 建议结论</strong>（Why · 缺口 · 动作 · 风险 · 何种证据改结论）</div>
+          </div>
+        </div>
+        <div class="arrow-hint">方案草稿 ↓ → AI → 左至审批</div>
+      </section>
+    </div>
+
+    <div class="legend">
+      <span><i class="swatch blue"></i>处理节点（采集 / 规则 / 写入）</span>
+      <span><i class="swatch brown"></i>决策节点（机会门禁 / AI / 负责人审批）</span>
+      <span><i class="swatch grey"></i>灰色条 = 该步产出</span>
+      <span><span class="badge b-ok">本期</span>主路径 &nbsp;<span class="badge b-weak">增强</span>有则用 &nbsp;<span class="badge b-no">不做</span>本期非目标</span>
+    </div>
+
+    <p class="note">
+      流行度口径：P0 = 上新×list_rank；P1 = Ships Now；P2 = 社媒/PipiAds（人工或另立爬）；P3 秀场趋势不进自动池。
+      撞款 Pass：不上新 → 诊断自有款为何没卖好 → 改款建议只改一维。
+    </p>
+  </div>
+</body>
+</html>

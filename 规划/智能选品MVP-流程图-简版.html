@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>智能选品 MVP · 简图</title>
+  <style>
+    :root {
+      --ink: #1c2430;
+      --muted: #6b7585;
+      --line: #d0d7e0;
+      --blue: #2f5f7a;
+      --blue-soft: #eaf2f6;
+      --brown: #7a5c12;
+      --brown-soft: #f6f0de;
+      --grey: #f0f2f5;
+      --card: #fff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px 20px 48px;
+      font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", sans-serif;
+      background: #f6f7f9;
+      color: var(--ink);
+    }
+    .wrap {
+      max-width: 920px;
+      margin: 0 auto;
+    }
+    h1 {
+      margin: 0 0 4px;
+      font-size: 20px;
+      font-weight: 650;
+    }
+    .sub {
+      margin: 0 0 24px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .rail {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .step {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+    .spine {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .dot {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .dot.b { background: var(--blue); }
+    .dot.r { background: var(--brown); }
+    .line {
+      width: 2px;
+      flex: 1;
+      min-height: 16px;
+      background: var(--line);
+      margin: 6px 0;
+    }
+    .step:last-child .line { display: none; }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px 16px 14px;
+      margin-bottom: 14px;
+    }
+    .panel h2 {
+      margin: 0 0 10px;
+      font-size: 15px;
+      font-weight: 650;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+    .pill.b { background: var(--blue-soft); color: var(--blue); }
+    .pill.r { background: var(--brown-soft); color: var(--brown); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .grid.two { grid-template-columns: 1fr 1fr; }
+    .grid.four { grid-template-columns: repeat(4, 1fr); }
+    .cell {
+      background: var(--grey);
+      border-radius: 8px;
+      padding: 10px 11px;
+      font-size: 12.5px;
+      line-height: 1.4;
+    }
+    .cell strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 4px;
+      font-weight: 650;
+    }
+    .cell span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .rule {
+      margin-top: 10px;
+      padding: 8px 11px;
+      border-radius: 8px;
+      background: var(--brown-soft);
+      color: var(--brown);
+      font-size: 12.5px;
+      font-weight: 550;
+    }
+    .foot {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 10px 12px;
+      background: var(--card);
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+    }
+    @media (max-width: 720px) {
+      .grid, .grid.two, .grid.four { grid-template-columns: 1fr; }
+      .step { grid-template-columns: 40px 1fr; }
+      .dot { width: 30px; height: 30px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>智能选品 MVP</h1>
+    <p class="sub">三步看清：爬什么 → 出什么机会 → AI 怎么判 · 本期不做自动成本</p>
+
+    <div class="rail">
+      <!-- 1 -->
+      <div class="step">
+        <div class="spine">
+          <div class="dot b">1</div>
+          <div class="line"></div>
+        </div>
+        <div class="panel">
+          <h2>爬 / 采什么 <span class="pill b">信息进场</span></h2>
+          <div class="grid">
+            <div class="cell">
+              <strong>竞品站（主）</strong>
+              <span>图·价·色·链接<br>上新/下架 · list_rank<br>Ships Now（有则抓）</span>
+            </div>
+            <div class="cell">
+              <strong>社媒 / 广告</strong>
+              <span>Ins 流行与主推<br>PipiAds 播放·点击</span>
+            </div>
+            <div class="cell">
+              <strong>内部</strong>
+              <span>AZ 相似款<br>历史销量</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2 -->
+      <div class="step">
+        <div class="spine">
+          <div class="dot r">2</div>
+          <div class="line"></div>
+        </div>
+        <div class="panel">
+          <h2>出什么机会 <span class="pill r">机会池</span></h2>
+          <div class="grid two" style="margin-bottom: 8px;">
+            <div class="cell">
+              <strong>主规则</strong>
+              <span>竞品「上新 × 列表靠前」</span>
+            </div>
+            <div class="cell">
+              <strong>列表上看</strong>
+              <span>图价站 · 排名 · 颜色 · 现货 · 相似款</span>
+            </div>
+          </div>
+          <div class="grid four">
+            <div class="cell"><strong>跟款上新</strong><span>热×新，不撞款</span></div>
+            <div class="cell"><strong>撞款诊断</strong><span>极似 → 不上新</span></div>
+            <div class="cell"><strong>改一维</strong><span>改面料/版型/长</span></div>
+            <div class="cell"><strong>社媒/广告热</strong><span>传播侧补强</span></div>
+          </div>
+          <div class="rule">门禁：与自有极相似 → 不跟新款，改查「自家为何没卖好」</div>
+        </div>
+      </div>
+
+      <!-- 3 -->
+      <div class="step">
+        <div class="spine">
+          <div class="dot b">3</div>
+          <div class="line"></div>
+        </div>
+        <div class="panel">
+          <h2>AI 怎么判 <span class="pill b">建议推 / 谨慎·MTO / 不建议推</span></h2>
+          <div class="grid">
+            <div class="cell">
+              <strong>流行？</strong>
+              <span>上新×排名<br>现货 / 社媒 / 广告</span>
+            </div>
+            <div class="cell">
+              <strong>撞款？</strong>
+              <span>极似 → 诊断+改一维<br>不装「再开一款」</span>
+            </div>
+            <div class="cell">
+              <strong>改什么？</strong>
+              <span>保留优势 · 只改一维<br>缺证据写 unknown</span>
+            </div>
+          </div>
+          <div class="rule" style="background: var(--grey); color: var(--muted); font-weight: 500;">
+            本期：成本不自动算（标「未评估」）· 可生产性有数用、无数 unknown 可过
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 -->
+      <div class="step">
+        <div class="spine">
+          <div class="dot r">4</div>
+          <div class="line"></div>
+        </div>
+        <div class="panel">
+          <h2>人审 → 进选款 <span class="pill r">闭环</span></h2>
+          <div class="grid two">
+            <div class="cell">
+              <strong>负责人</strong>
+              <span>通过 / 驳回（必填原因）</span>
+            </div>
+            <div class="cell">
+              <strong>系统</strong>
+              <span>写入选款 · 埋点回流</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="foot">流行度：排名为主 → 现货增强 → 社媒/广告为辅。秀场趋势不进自动池。</p>
+  </div>
+</body>
+</html>

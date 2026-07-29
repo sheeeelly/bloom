@@ -1,0 +1,17 @@
+# GitLab Pages · 选品智能化平台演示站
+# 部署目录：selection-intelligence-platform → public/
+# 访问权限随项目可见性（Internal = 登录 GitLab 的同组同学可开）
+
+image: alpine:3.15
+
+pages:
+  stage: deploy
+  script:
+    - mkdir -p public
+    - cp -R selection-intelligence-platform/. public/
+    - ls -la public
+  artifacts:
+    paths:
+      - public
+  only:
+    - main

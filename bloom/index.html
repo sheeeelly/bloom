@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bloom · AT 智能选品工作台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f3ec;
+  --panel:#fffdf8;
+  --panel2:#faf7f0;
+  --ink:#221d17;
+  --ink2:#5c554b;
+  --ink3:#98907f;
+  --line:#e6e0d2;
+  --line2:#d8d0bd;
+  --accent:#7a2b42;      /* 酒红 */
+  --accent-soft:#f4e7ea;
+  --gold:#a97e2f;
+  --gold-soft:#f5edda;
+  --green:#3d6b52;
+  --green-soft:#e5efe8;
+  --orange:#b4552d;
+  --orange-soft:#f7e8df;
+  --blue:#2d5a8f;
+  --blue-soft:#e4ecf5;
+  --violet:#63549e;
+  --violet-soft:#ecebf6;
+  --red:#a83232;
+  --red-soft:#f6e3e3;
+  --radius:10px;
+  --serif:"Fraunces","Noto Serif SC",serif;
+  --sans:"Noto Sans SC","PingFang SC",-apple-system,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--ink);
+  font-size:13px;
+  line-height:1.6;
+  background-image:radial-gradient(rgba(122,43,66,.028) 1px,transparent 1px);
+  background-size:22px 22px;
+}
+::selection{background:var(--accent);color:#fff}
+
+/* ============ 布局 ============ */
+.app{display:flex;min-height:100vh}
+.sidebar{
+  width:216px;flex-shrink:0;background:var(--ink);color:#e9e2d5;
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
+}
+.logo{padding:26px 22px 20px;border-bottom:1px solid rgba(233,226,213,.12)}
+.logo h1{font-family:var(--serif);font-size:24px;font-weight:700;letter-spacing:.5px;color:#f6f1e6}
+.logo h1 em{color:#c88fa2;font-style:normal}
+.logo p{font-size:10.5px;color:#9a917f;margin-top:3px;letter-spacing:1.5px}
+.nav{padding:14px 10px;flex:1}
+.nav-group{font-size:10px;letter-spacing:2px;color:#7d7462;padding:14px 14px 6px;text-transform:uppercase}
+.nav-item{
+  display:flex;align-items:center;gap:9px;padding:8px 14px;border-radius:7px;
+  cursor:pointer;color:#c9c1af;font-size:13px;margin-bottom:2px;transition:all .15s;
+  position:relative;
+}
+.nav-item:hover{background:rgba(255,255,255,.06);color:#f2ecdf}
+.nav-item.active{background:var(--accent);color:#fff}
+.nav-item .num{
+  margin-left:auto;background:rgba(255,255,255,.14);font-size:10px;
+  padding:0 7px;border-radius:9px;line-height:17px;
+}
+.nav-item.active .num{background:rgba(255,255,255,.25)}
+.nav-item svg{width:15px;height:15px;flex-shrink:0}
+.sidebar-foot{padding:16px 22px;border-top:1px solid rgba(233,226,213,.12);font-size:10.5px;color:#7d7462;line-height:1.7}
+.sidebar-foot b{color:#b3a98f;font-weight:500}
+
+.main{flex:1;min-width:0;padding:0 32px 60px}
+.topbar{
+  display:flex;align-items:center;gap:14px;padding:18px 0 16px;
+  border-bottom:1px solid var(--line);margin-bottom:22px;position:sticky;top:0;
+  background:linear-gradient(var(--bg) 88%,transparent);z-index:50;
+}
+.topbar h2{font-family:var(--serif);font-size:23px;font-weight:600}
+.topbar .crumb{color:var(--ink3);font-size:12px}
+.topbar .right{margin-left:auto;display:flex;gap:10px;align-items:center}
+.batch-pill{
+  background:var(--panel);border:1px solid var(--line2);border-radius:20px;
+  padding:4px 14px;font-size:11.5px;color:var(--ink2);
+}
+.batch-pill b{color:var(--accent);font-weight:600}
+.avatar{
+  width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;
+}
+
+/* ============ 通用组件 ============ */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.card-head{padding:13px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.card-head h3{font-size:13.5px;font-weight:700}
+.card-head .hint{font-size:11px;color:var(--ink3);font-weight:400}
+.card-body{padding:16px 18px}
+
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;padding:1px 8px;border-radius:4px;font-weight:500;white-space:nowrap}
+.tag.accent{background:var(--accent-soft);color:var(--accent)}
+.tag.gold{background:var(--gold-soft);color:var(--gold)}
+.tag.green{background:var(--green-soft);color:var(--green)}
+.tag.orange{background:var(--orange-soft);color:var(--orange)}
+.tag.blue{background:var(--blue-soft);color:var(--blue)}
+.tag.violet{background:var(--violet-soft);color:var(--violet)}
+.tag.red{background:var(--red-soft);color:var(--red)}
+.tag.gray{background:#efece3;color:var(--ink2)}
+.tag.outline{background:transparent;border:1px dashed var(--line2);color:var(--ink3)}
+
+.btn{
+  display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:7px;
+  border:1px solid var(--line2);background:var(--panel);color:var(--ink);
+  font-size:12.5px;font-weight:500;cursor:pointer;font-family:var(--sans);transition:all .15s;
+}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:#651f34;color:#fff}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--ink2)}
+.btn.ghost:hover{color:var(--accent)}
+.btn.sm{padding:4px 11px;font-size:11.5px}
+.btn.danger{color:var(--red);border-color:#e3c8c8}
+.btn.danger:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+table.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+table.tbl th{
+  text-align:left;font-size:10.5px;letter-spacing:.8px;color:var(--ink3);font-weight:600;
+  padding:9px 12px;border-bottom:1px solid var(--line);background:var(--panel2);white-space:nowrap;
+}
+table.tbl td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.tbl tr:last-child td{border-bottom:none}
+table.tbl tr.clickable{cursor:pointer}
+table.tbl tr.clickable:hover td{background:#fbf8f0}
+
+.swatch{
+  width:38px;height:48px;border-radius:5px;flex-shrink:0;position:relative;overflow:hidden;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);
+}
+.swatch::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(145deg,rgba(255,255,255,.35),transparent 45%,rgba(0,0,0,.12));
+}
+.swatch.lg{width:56px;height:72px;border-radius:7px}
+
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--ink2);margin-bottom:5px}
+.field label .req{color:var(--red)}
+.field input[type=text],.field textarea,.field select{
+  width:100%;padding:8px 11px;border:1px solid var(--line2);border-radius:7px;
+  font-family:var(--sans);font-size:12.5px;background:#fff;color:var(--ink);outline:none;
+}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
+.field textarea{resize:vertical;min-height:60px}
+.field .sub{font-size:10.5px;color:var(--ink3);margin-top:4px}
+
+.status-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 10px;border-radius:12px}
+.status-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.st-Draft{background:#efece3;color:var(--ink2)}
+.st-AI_Reviewing{background:var(--violet-soft);color:var(--violet)}
+.st-AI_Done{background:var(--blue-soft);color:var(--blue)}
+.st-Pending_Approval{background:var(--gold-soft);color:var(--gold)}
+.st-Rejected{background:var(--red-soft);color:var(--red)}
+.st-Sync_Pending{background:var(--orange-soft);color:var(--orange)}
+.st-Sync_Failed{background:var(--red-soft);color:var(--red)}
+.st-Synced_To_Selection{background:var(--green-soft);color:var(--green)}
+
+.gate{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:12px}
+.gate:last-child{border-bottom:none}
+.gate .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.gate .dot.ok{background:var(--green)}
+.gate .dot.warn{background:var(--gold)}
+.gate .dot.bad{background:var(--red)}
+.gate .dot.unknown{background:var(--ink3)}
+.gate .val{margin-left:auto;font-weight:600;font-size:11px}
+
+.page{display:none;animation:fadeUp .35s ease}
+.page.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+
+/* 场景标记 */
+.scenario{font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:4px;letter-spacing:.5px}
+.sc-new{background:var(--ink);color:#f3edde}
+.sc-pos{background:var(--green);color:#fff}
+.sc-neg{background:var(--orange);color:#fff}
+
+/* 信号图标行 */
+.sig-row{display:flex;gap:5px;flex-wrap:wrap}
+.sig{
+  font-size:10px;padding:1px 7px;border-radius:4px;font-weight:600;
+  display:inline-flex;align-items:center;gap:4px;
+}
+.sig-radar{background:var(--green-soft);color:var(--green)}
+.sig-ads{background:var(--orange-soft);color:var(--orange)}
+.sig-email{background:var(--blue-soft);color:var(--blue)}
+.sig-social{background:var(--accent-soft);color:var(--accent)}
+.sig-internal{background:var(--violet-soft);color:var(--violet)}
+.sig.off{background:#f0ede4;color:#c0b8a5;font-weight:400}
+.sig.mkt{background:#eee9dc;color:#6b6353;box-shadow:inset 0 0 0 1px #ddd5c2}
+.sig.mkt.on{background:var(--ink);color:#f3edde;box-shadow:none}
+
+/* Tabs */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:16px}
+.tab{
+  padding:8px 16px;font-size:12.5px;color:var(--ink2);cursor:pointer;border-bottom:2px solid transparent;
+  margin-bottom:-1px;font-weight:500;display:flex;align-items:center;gap:7px;
+}
+.tab:hover{color:var(--accent)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:700}
+.tab .cnt{background:#efece3;color:var(--ink2);font-size:10px;padding:0 6px;border-radius:8px;line-height:16px}
+.tab.active .cnt{background:var(--accent-soft);color:var(--accent)}
+
+/* KPI 卡 */
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}
+.kpi .k-label{font-size:11px;color:var(--ink3);font-weight:600;letter-spacing:.5px}
+.kpi .k-value{font-family:var(--serif);font-size:30px;font-weight:700;margin:4px 0 2px}
+.kpi .k-sub{font-size:11px;color:var(--ink2)}
+.kpi .k-sub b{color:var(--green)}
+
+/* 漏斗 */
+.funnel{display:flex;align-items:stretch;gap:0;margin-top:6px}
+.funnel .f-step{flex:1;text-align:center;position:relative;padding:14px 6px}
+.funnel .f-step:not(:last-child)::after{
+  content:"›";position:absolute;right:-6px;top:50%;transform:translateY(-50%);
+  color:var(--line2);font-size:22px;z-index:2;
+}
+.funnel .f-num{font-family:var(--serif);font-size:26px;font-weight:700}
+.funnel .f-name{font-size:11px;color:var(--ink2);margin-top:2px}
+.funnel .f-step.hl .f-num{color:var(--accent)}
+
+/* AI 建议输出 */
+.ai-verdict{
+  border-radius:var(--radius);padding:16px 18px;margin-bottom:14px;
+  border:1px solid;position:relative;
+}
+.ai-verdict.recommend{background:var(--green-soft);border-color:#c4d9cc}
+.ai-verdict.cautious{background:var(--gold-soft);border-color:#e2d3ab}
+.ai-verdict.mto{background:var(--blue-soft);border-color:#c3d3e5}
+.ai-verdict.reject{background:var(--red-soft);border-color:#e0c3c3}
+.ai-verdict h4{font-family:var(--serif);font-size:17px;margin-bottom:4px}
+.ai-verdict .v-label{font-size:10px;letter-spacing:2px;font-weight:700;opacity:.6;text-transform:uppercase}
+.ai-sec{margin-bottom:12px}
+.ai-sec h5{font-size:11px;letter-spacing:1px;color:var(--ink3);font-weight:700;margin-bottom:6px;text-transform:uppercase}
+.ai-sec ul{padding-left:18px}
+.ai-sec li{margin-bottom:4px;font-size:12.5px}
+
+/* 时间线 */
+.timeline{position:relative;padding-left:20px}
+.timeline::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:1px;background:var(--line2)}
+.tl-item{position:relative;padding-bottom:14px;font-size:12px}
+.tl-item::before{
+  content:"";position:absolute;left:-19px;top:5px;width:9px;height:9px;border-radius:50%;
+  background:var(--panel);border:2px solid var(--ink3);
+}
+.tl-item.done::before{background:var(--green);border-color:var(--green)}
+.tl-item.now::before{background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.tl-item .tl-time{color:var(--ink3);font-size:10.5px}
+
+/* 提示条 */
+.notice{
+  display:flex;gap:10px;align-items:flex-start;padding:11px 14px;border-radius:8px;
+  font-size:12px;margin-bottom:14px;border:1px solid;
+}
+.notice.warn{background:var(--gold-soft);border-color:#e2d3ab;color:#6d5320}
+.notice.info{background:var(--blue-soft);border-color:#c3d3e5;color:#274c76}
+.notice.err{background:var(--red-soft);border-color:#e0c3c3;color:#7e2727}
+
+/* Toast */
+#toast{
+  position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--ink);color:#f3edde;padding:11px 22px;border-radius:9px;font-size:13px;
+  transition:transform .3s cubic-bezier(.2,.9,.3,1.2);z-index:999;box-shadow:0 8px 30px rgba(0,0,0,.25);
+}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+/* 弹层 */
+.modal-mask{
+  position:fixed;inset:0;background:rgba(34,29,23,.45);z-index:200;display:none;
+  align-items:center;justify-content:center;backdrop-filter:blur(2px);
+}
+.modal-mask.show{display:flex}
+.modal{
+  background:var(--panel);border-radius:14px;width:520px;max-width:92vw;max-height:86vh;
+  overflow:auto;padding:24px 26px;animation:fadeUp .25s ease;
+}
+.modal h3{font-family:var(--serif);font-size:19px;margin-bottom:14px}
+
+.mono{font-family:"SF Mono",Menlo,monospace;font-size:11px;color:var(--ink2)}
+.rank-num{font-family:var(--serif);font-size:17px;font-weight:700}
+.delta-up{color:var(--green);font-size:10.5px;font-weight:700}
+.delta-new{color:var(--accent);font-size:10.5px;font-weight:700}
+.muted{color:var(--ink3)}
+hr.sep{border:none;border-top:1px dashed var(--line2);margin:14px 0}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ================= 侧栏 ================= -->
+<aside class="sidebar">
+  <div class="logo">
+    <h1>Bloom<em>.</em></h1>
+    <p>AT 智能选品工作台 · DEMO</p>
+  </div>
+  <nav class="nav">
+    <div class="nav-group">工作流</div>
+    <div class="nav-item" data-page="dashboard" onclick="go('dashboard')">◈ 总览摘要</div>
+    <div class="nav-item" data-page="monitor" onclick="go('monitor')">☴ 监控报告 <span class="num">5源</span></div>
+    <div class="nav-item active" data-page="pool" onclick="go('pool')">◍ 机会池 <span class="num" id="nav-pool-cnt">9</span></div>
+    <div class="nav-item" data-page="schemes" onclick="go('schemes')">✎ 选品方案 <span class="num" id="nav-scheme-cnt">4</span></div>
+    <div class="nav-item" data-page="approval" onclick="go('approval')">✓ 审批队列 <span class="num" id="nav-appr-cnt">1</span></div>
+    <div class="nav-item" data-page="receipt" onclick="go('receipt')">⇄ 写入选款回执</div>
+    <div class="nav-group">AI × 人工共同维护</div>
+    <div class="nav-item" data-page="mapping" onclick="go('mapping')">◳ 属性映射表 <span class="num" style="background:rgba(200,143,162,.35)">2 待确认</span></div>
+    <div class="nav-group">当前批次</div>
+    <div style="padding:6px 14px;font-size:11px;color:#9a917f;line-height:1.8">
+      <span class="mono" style="color:#c9c1af">AT-2026W31-b2</span><br>
+      爬取于 07-27 03:12 · 新鲜度 ✓<br>
+      source_line=<b style="color:#c88fa2">atelier</b>
+    </div>
+  </nav>
+  <div class="sidebar-foot">
+    登录角色：<b>品类运营 · 林悦</b><br>
+    generation_source=system_hub_at
+  </div>
+</aside>
+
+<!-- ================= 主区 ================= -->
+<main class="main">
+  <div class="topbar">
+    <h2 id="page-title">机会池</h2>
+    <span class="crumb" id="page-crumb">三信号 → 机会池 → 方案 → AI → 审批 → 写入选款</span>
+    <div class="right">
+      <select id="cat-sel" onchange="if(this.value!=='AT'){toast('该品类接入中：平台架构支持多品类，数据源标定后即可开通');this.value='AT'}" style="border:1px solid var(--line2);background:var(--panel);border-radius:20px;padding:4px 12px;font-size:11.5px;color:var(--ink);font-family:var(--sans);outline:none;cursor:pointer">
+        <option value="AT">👗 AT 礼服（当前）</option>
+        <option value="BD">BD 伴娘 · 接入中</option>
+        <option value="WD">WD 婚纱 · 接入中</option>
+        <option value="MOB">MOB 妈妈裙 · 规划中</option>
+      </select>
+      <select id="market-sel" onchange="setMarket(this.value)" style="border:1px solid var(--line2);background:var(--panel);border-radius:20px;padding:4px 12px;font-size:11.5px;color:var(--ink);font-family:var(--sans);outline:none;cursor:pointer">
+        <option value="all">🌐 全部市场</option>
+        <option value="US">🇺🇸 美国 US</option>
+        <option value="UK">🇬🇧 英国 UK</option>
+        <option value="AU">🇦🇺 澳洲 AU</option>
+      </select>
+      <span class="batch-pill">批次 <b>AT-2026W31-b2</b> · ISO 周 2026-W31</span>
+      <div class="avatar">悦</div>
+    </div>
+  </div>
+
+  <!-- ========== 页面：总览 ========== -->
+  <section class="page" id="page-dashboard">
+    <!-- 北极星 + 结果指标：增量是唯一核心目标 -->
+    <div style="display:grid;grid-template-columns:1.7fr 1fr 1fr 1fr;gap:14px;margin-bottom:18px">
+      <div class="kpi" style="background:var(--ink);border-color:var(--ink)">
+        <div class="k-label" style="color:#b3a98f">★ 北极星 · 系统选款带来的增量 GMV</div>
+        <div class="k-value" style="color:#f6f1e6">$186K</div>
+        <div class="k-sub" style="color:#c9c1af">上线以来 60 天口径 · 23 款已上架 · 占品类新款 GMV <b style="color:#8fc7a4">12.4%</b>（目标 ≥10%）</div>
+      </div>
+      <div class="kpi"><div class="k-label">30 天动销率 · 系统款 vs 人工款</div><div class="k-value">78%</div><div class="k-sub">人工选款同期 61%，<b>+17pp</b></div></div>
+      <div class="kpi"><div class="k-label">单款平均 30 天销量</div><div class="k-value">142 件</div><div class="k-sub">对照组（同期人工选款）106 件，<b>+34%</b></div></div>
+      <div class="kpi"><div class="k-label">在途款 · 写入选款后未上架</div><div class="k-value">17</div><div class="k-sub">打版 6 · 生管生产 7 · 商品信息准备 4</div></div>
+    </div>
+
+    <!-- 护栏指标：不是目标，是防止北极星失真的过程监控 -->
+    <div class="grid3" style="margin-bottom:18px">
+      <div class="card">
+        <div class="card-head"><h3>护栏 · 覆盖率（分渠道）</h3><span class="hint">分母按渠道单独定义，不合并</span></div>
+        <div class="card-body" style="padding:0">
+          <table class="tbl">
+            <tr><th>渠道</th><th>分母（本批应捕获）</th><th>覆盖</th></tr>
+            <tr><td>竞品官网列表</td><td>上新 × 前 50 名 = 18 款</td><td><b style="color:var(--green)">18/18</b></td></tr>
+            <tr><td>竞品广告在投</td><td>在投 ≥14 天 = 6 款</td><td><b style="color:var(--green)">6/6</b></td></tr>
+            <tr><td>竞品邮件主推</td><td>主推位 = 5 款</td><td><b style="color:var(--green)">5/5</b></td></tr>
+            <tr><td>社媒舆情</td><td>人工录入，无客观分母</td><td class="muted">不设覆盖率</td></tr>
+          </table>
+          <p class="muted" style="font-size:11px;padding:8px 14px;margin:0">意义：增量的前提是「看见」——漏掉的爆款连被评估的机会都没有。覆盖率跌破 100% 才需行动，达标时无需关注。</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>护栏 · 成稿时长（前后对比）</h3></div>
+        <div class="card-body">
+          <div style="font-size:11.5px;margin-bottom:5px">改造前 · 人工找款+成稿 <b style="float:right">6.8h</b></div>
+          <div style="height:14px;background:#e0dbcd;border-radius:7px;margin-bottom:12px"><div style="height:100%;width:100%;background:var(--ink3);border-radius:7px"></div></div>
+          <div style="font-size:11.5px;margin-bottom:5px">现在 · 系统辅助 <b style="float:right;color:var(--green)">3.2h（−53%）</b></div>
+          <div style="height:14px;background:#e0dbcd;border-radius:7px;margin-bottom:12px"><div style="height:100%;width:47%;background:var(--green);border-radius:7px"></div></div>
+          <p class="muted" style="font-size:11px;margin:0">基线 = 上线前 4 周运营人工找款抽样日记；现值 = 系统时间戳（打开机会 → 提交审批），同品类同场景口径。</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>护栏 · AI 质量</h3><span class="hint">防减损，不作为目标</span></div>
+        <div class="card-body">
+          <div class="gate"><span class="dot ok"></span>负责人终审通过率<span class="val">84%</span></div>
+          <div class="gate"><span class="dot ok"></span>关键规则违背（越允许集）<span class="val">0 次</span></div>
+          <div class="gate"><span class="dot warn"></span>驳回原因回流<span class="val">12 条 → 提示词已迭代 3 版</span></div>
+          <hr class="sep">
+          <p class="muted" style="font-size:11px;margin:0">AI 建议质量最终由北极星验证：系统款的销量表现好，AI 才算真的有用；通过率只用于监控 AI 是否在拖累流程。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-head"><h3>选品链路 · 本批次（平台内）</h3><span class="hint">AT-2026W31-b2 · 实时</span></div>
+      <div class="card-body">
+        <div class="funnel">
+          <div class="f-step"><div class="f-num">47</div><div class="f-name">信号入库</div></div>
+          <div class="f-step hl"><div class="f-num">9</div><div class="f-name">机会池</div></div>
+          <div class="f-step"><div class="f-num">4</div><div class="f-name">方案草稿</div></div>
+          <div class="f-step"><div class="f-num">2</div><div class="f-name">AI 建议完成</div></div>
+          <div class="f-step"><div class="f-num">1</div><div class="f-name">待负责人审批</div></div>
+          <div class="f-step hl"><div class="f-num">1</div><div class="f-name">已写入选款</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-head"><h3>落地链路 · 上线以来累计（下游系统）</h3><span class="hint">goods_id 全链路贯穿 · 上架后销量自动回流北极星</span></div>
+      <div class="card-body">
+        <div class="funnel">
+          <div class="f-step"><div class="f-num">40</div><div class="f-name">写入选款</div></div>
+          <div class="f-step"><div class="f-num">34</div><div class="f-name">打版完成</div></div>
+          <div class="f-step"><div class="f-num">28</div><div class="f-name">生管系统生产</div></div>
+          <div class="f-step"><div class="f-num">26</div><div class="f-name">商品信息就绪</div></div>
+          <div class="f-step hl"><div class="f-num">23</div><div class="f-name">已上架</div></div>
+          <div class="f-step hl"><div class="f-num">18</div><div class="f-name">30 天内产生销量</div></div>
+        </div>
+        <p class="muted" style="font-size:11px;margin:6px 0 0">流失关注点：打版→生产 6 款卡在面料齐套；信息就绪→上架 3 款等摄影排期。下游环节的时效同样决定增量兑现速度。</p>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-head"><h3>五信号源健康度</h3></div>
+        <div class="card-body">
+          <div class="gate"><span class="dot ok"></span>竞品网站雷达（AT 轨）<span class="val" style="color:var(--green)">正常 · 5 站 · age 10h</span></div>
+          <div class="gate"><span class="dot ok"></span>竞品广告投放（Ad Library）<span class="val" style="color:var(--green)">正常 · Meta/TikTok · 32 条在投</span></div>
+          <div class="gate"><span class="dot ok"></span>竞品邮件主推（订阅收件箱）<span class="val" style="color:var(--green)">正常 · 本周 11 封</span></div>
+          <div class="gate"><span class="dot warn"></span>社媒舆情（人工录入）<span class="val" style="color:var(--gold)">本周 6 条 · 1 条翻车</span></div>
+          <div class="gate"><span class="dot ok"></span>AZ 相似款销量（盘古三维）<span class="val" style="color:var(--green)">正常 · computed 07-27</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>三类场景分布（本批次机会）</h3></div>
+        <div class="card-body">
+          <div class="gate"><span class="scenario sc-new">纯新款</span><span style="font-size:12px;color:var(--ink2)">竞品上新×热销，站内无同款</span><span class="val">4 个</span></div>
+          <div class="gate"><span class="scenario sc-pos">正向改款</span><span style="font-size:12px;color:var(--ink2)">站内热销款 × 竞品热卖属性叠加</span><span class="val">3 个</span></div>
+          <div class="gate"><span class="scenario sc-neg">负向改款</span><span style="font-size:12px;color:var(--ink2)">用户负反馈（VOC/退货/翻车）驱动</span><span class="val">2 个</span></div>
+          <hr class="sep">
+          <p class="muted" style="font-size:11.5px">场景由信号组合自动预判，运营在方案草稿中可修改。纯新款侧重「不漏」，正向改款侧重「放大确定性」，负向改款侧重「止损修复」。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 页面：监控报告 ========== -->
+  <section class="page" id="page-monitor">
+    <div class="tabs" id="monitor-tabs">
+      <div class="tab active" data-mtab="radar" onclick="mtab('radar')">竞品网站雷达 <span class="cnt">12</span></div>
+      <div class="tab" data-mtab="ads" onclick="mtab('ads')">竞品广告投放 <span class="cnt">5</span></div>
+      <div class="tab" data-mtab="email" onclick="mtab('email')">竞品邮件主推 <span class="cnt">4</span></div>
+      <div class="tab" data-mtab="social" onclick="mtab('social')">社媒舆情 <span class="cnt">6</span></div>
+      <div class="tab" data-mtab="internal" onclick="mtab('internal')">AZ 相似款表现 <span class="cnt">8</span></div>
+    </div>
+
+    <!-- 雷达 -->
+    <div class="mpanel" id="mpanel-radar">
+      <div class="notice info">◈ 数据来自每周对竞品官网的自动爬取，和上一轮对比得出「谁上新了、谁下架了、排名变化」。所有原始爬取记录保留 90 天，审批时可回查证据。按上架时间排序的站（Oh Polly、House of CB）单独归入新到池，不和销量排序的站混在一起。</div>
+      <div class="card">
+        <div class="card-head"><h3>上新 & 下架动态</h3><span class="hint">批次 AT-2026W31-b2 · data_week 2026-W31</span></div>
+        <table class="tbl" id="radar-table"></table>
+      </div>
+    </div>
+
+    <!-- 广告投放 -->
+    <div class="mpanel" id="mpanel-ads" style="display:none">
+      <div class="notice info">◈ 新信号源：竞品在 <b>Meta / TikTok 广告库</b>投放中的款。持续在投 ≥14 天 ≈ 竞品用真金白银验证过的款，作为机会池 <span class="sig sig-ads">AD 在投</span> 信号叠加。</div>
+      <div class="card">
+        <div class="card-head"><h3>在投广告监控</h3><span class="hint">采集于 07-27 · 按预估投放强度降序</span></div>
+        <table class="tbl" id="ads-table"></table>
+      </div>
+    </div>
+
+    <!-- 邮件主推 -->
+    <div class="mpanel" id="mpanel-email" style="display:none">
+      <div class="notice info">◈ 新信号源：订阅竞品官方 Newsletter，解析邮件中的<b>主推位（Hero）与次推位</b>商品。邮件主推 = 竞品自己的流量倾斜意图，作为机会池 <span class="sig sig-email">EDM 主推</span> 信号叠加。</div>
+      <div class="card">
+        <div class="card-head"><h3>本周竞品邮件拆解</h3><span class="hint">收件箱 at-radar@ · 本周 11 封，命中 AT 品类 4 封</span></div>
+        <table class="tbl" id="email-table"></table>
+      </div>
+    </div>
+
+    <!-- 社媒 -->
+    <div class="mpanel" id="mpanel-social" style="display:none">
+      <div class="notice warn">⚠ 一期为运营人工录入（默认 Instagram）。标记「翻车」的帖子会自动把关联款置为舆情风险，AI 建议和负责人审批时都会高亮提醒。</div>
+      <div class="card">
+        <div class="card-head"><h3>社媒证据（好评 / 翻车帖，挂到机会或方案上）</h3>
+          <span style="margin-left:auto"><button class="btn sm primary" onclick="toast('Demo：打开社媒证据录入表单（platform / post_url / 翻车标记）')">＋ 录入证据</button></span>
+        </div>
+        <table class="tbl" id="social-table"></table>
+      </div>
+    </div>
+
+    <!-- 内部相似款 -->
+    <div class="mpanel" id="mpanel-internal" style="display:none">
+      <div class="notice info">◈ 这是五个信号源里唯一的<b>内部视角</b>：竞品信号说"外面什么在火"，这里回答"<b>长得像的款我们自己卖过吗、卖得怎么样</b>"（按廓形+面料+颜色找自家相似款）。它不用来发现竞品机会，而是用来<b>验证机会、拦截风险</b>——自家相似款卖得好 → 机会加分；卖不动/退货高 → 机会减分；没做过 → 标"无参考"，不装作没风险。同时它独立产出正向改款（自家热销）和负向改款（被吐槽）两类机会。</div>
+      <div class="card">
+        <div class="card-head"><h3>自家相似款战绩（近 12 个月）</h3><span class="hint">数据更新于 2026-07-27</span></div>
+        <table class="tbl" id="internal-table"></table>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ========== 页面：属性映射表（AI × 人工共维模块） ========== -->
+  <section class="page" id="page-mapping">
+    <div class="notice info">◈ 这是属性体系的<b>字典层</b>，由 AI 和人工共同维护：内部属性有标准叫法，竞品站对同一个东西的叫法五花八门（我们叫"鱼尾"，竞品叫 mermaid / fishtail / trumpet）。<b>竞品热卖属性榜和相似款匹配都依赖这张表</b>——映射缺一条，对应的信号就等于不存在。</div>
+
+    <div class="grid3" style="margin-bottom:16px">
+      <div class="card"><div class="card-body">
+        <div style="font-size:11px;letter-spacing:1px;color:var(--violet);font-weight:700;margin-bottom:8px">🤖 AI 负责</div>
+        <div style="font-size:12.5px;line-height:2">每轮爬取自动发现新叫法<br>给出归类建议 + 置信度<br>巡检已生效映射的一致性（同词不同映射告警）</div>
+      </div></div>
+      <div class="card"><div class="card-body">
+        <div style="font-size:11px;letter-spacing:1px;color:var(--accent);font-weight:700;margin-bottom:8px">👤 人工负责</div>
+        <div style="font-size:12.5px;line-height:2">确认 / 修正 AI 的归类建议<br>裁决归并规则（如 trumpet 归不归鱼尾）<br>新增内部没有的属性维度</div>
+      </div></div>
+      <div class="card"><div class="card-body">
+        <div style="font-size:11px;letter-spacing:1px;color:var(--green);font-weight:700;margin-bottom:8px">⇄ 共同产出</div>
+        <div style="font-size:12.5px;line-height:2">映射 128 条 · 覆盖竞品在售款 <b>96%</b><br>AI 建议采纳率 <b>87%</b>（人工修正回流优化）<br>词典版本化，变更可追溯</div>
+      </div></div>
+    </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head"><h3>已生效映射</h3><span class="hint">内部标准叫法 ⇄ 竞品站外部叫法 · 全品类共用，逐品类扩充</span>
+          <span style="margin-left:auto"><button class="btn sm primary" onclick="toast('Demo：新增映射（选内部属性 → 填外部叫法 → 生效）')">＋ 新增映射</button></span>
+        </div>
+        <table class="tbl">
+          <tr><th>内部标准属性（维度）</th><th>竞品站叫法（示例）</th><th>映射来源</th><th>本批命中</th><th>状态</th></tr>
+          <tr>
+            <td><b>方领</b> <span class="muted">（领形）</span></td>
+            <td class="mono">square neck · square neckline · squared bust</td>
+            <td><span class="tag gray">词典规则</span></td><td>9 款</td>
+            <td><span class="tag green">已生效</span></td>
+          </tr>
+          <tr>
+            <td><b>垂领</b> <span class="muted">（领形）</span></td>
+            <td class="mono">cowl neck · draped neckline</td>
+            <td><span class="tag gray">词典规则</span></td><td>3 款</td>
+            <td><span class="tag green">已生效</span></td>
+          </tr>
+          <tr>
+            <td><b>鱼尾</b> <span class="muted">（廓形）</span></td>
+            <td class="mono">mermaid · fishtail · trumpet</td>
+            <td><span class="tag blue">AI 建议 + 人工核对</span></td><td>11 款</td>
+            <td><span class="tag green">已生效</span> <span class="muted" style="font-size:10.5px">注：内部区分鱼尾/小鱼尾，外部混用，按归并规则处理</span></td>
+          </tr>
+          <tr>
+            <td><b>后背绑带</b> <span class="muted">（背部设计）</span></td>
+            <td class="mono">tie-back · lace-up back · strappy back</td>
+            <td><span class="tag blue">AI 建议 + 人工核对</span></td><td>6 款</td>
+            <td><span class="tag green">已生效</span></td>
+          </tr>
+          <tr>
+            <td><b>泡泡袖</b> <span class="muted">（袖型）</span></td>
+            <td class="mono">puff sleeve · balloon sleeve</td>
+            <td><span class="tag gray">词典规则</span></td><td>4 款</td>
+            <td><span class="tag green">已生效</span></td>
+          </tr>
+          <tr>
+            <td><b>重磅缎</b> <span class="muted">（面料）</span></td>
+            <td class="mono">heavy satin · duchess satin · matte satin</td>
+            <td><span class="tag blue">AI 建议 + 人工核对</span></td><td>14 款</td>
+            <td><span class="tag green">已生效</span> <span class="muted" style="font-size:10.5px">satin 家族按克重/光泽拆分，避免全部归"缎面"</span></td>
+          </tr>
+          <tr>
+            <td><b>祖母绿</b> <span class="muted">（颜色 → 色族）</span></td>
+            <td class="mono">emerald · forest green · deep green</td>
+            <td><span class="tag gray">色族词典</span></td><td>5 款</td>
+            <td><span class="tag green">已生效</span> <span class="muted" style="font-size:10.5px">颜色按色族归并参与匹配，不追求逐色对齐</span></td>
+          </tr>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>待确认队列（爬取中发现的新叫法）</h3><span class="hint">未映射前，带这些词的款不参与属性统计——尽快归类</span></div>
+        <table class="tbl">
+          <tr><th>外部新叫法</th><th>出现于</th><th>本批出现</th><th>AI 归类建议</th><th></th></tr>
+          <tr>
+            <td class="mono"><b>scuba fabric</b></td><td>Babyboo · 商品详情</td><td>3 款</td>
+            <td>候选：太空棉（面料）· 置信度中</td>
+            <td><button class="btn sm" onclick="toast('Demo：已确认映射 scuba fabric → 太空棉，下批爬取生效')">确认归类</button></td>
+          </tr>
+          <tr>
+            <td class="mono"><b>bardot neckline</b></td><td>Club L London · 列表页</td><td>2 款</td>
+            <td>候选：一字肩（领形）· 置信度高</td>
+            <td><button class="btn sm" onclick="toast('Demo：已确认映射 bardot → 一字肩，下批爬取生效')">确认归类</button></td>
+          </tr>
+        </table>
+      </div>
+  </section>
+
+  <!-- ========== 页面：机会池 ========== -->
+  <section class="page active" id="page-pool">
+    <div class="tabs">
+      <div class="tab active" data-ptab="sales" onclick="ptab('sales')">销量池 · 上新×热销靠前 <span class="cnt" id="cnt-sales">4</span></div>
+      <div class="tab" data-ptab="recency" onclick="ptab('recency')">新到池 (recency_proxy) <span class="cnt" id="cnt-recency">2</span></div>
+      <div class="tab" data-ptab="positive" onclick="ptab('positive')"><span class="scenario sc-pos" style="font-size:9.5px">正向改款</span> 站内热销×竞品热卖属性 <span class="cnt" id="cnt-positive">3</span></div>
+      <div class="tab" data-ptab="negative" onclick="ptab('negative')"><span class="scenario sc-neg" style="font-size:9.5px">负向改款</span> 负反馈驱动 <span class="cnt" id="cnt-negative">2</span></div>
+    </div>
+
+    <div id="pool-filters" style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
+      <span class="tag gray">批次：AT-2026W31-b2（最新）</span>
+      <span class="tag gray">站点：AT 白名单</span>
+      <span class="tag green">仅有列表排名 rank_joined ✓</span>
+      <span class="tag gray">list_rank ≤ 50</span>
+      <span class="muted" style="font-size:11px;margin-left:auto">排序 = ORDER BY list_rank ASC NULLS LAST · 仅 sales_proxy 池</span>
+    </div>
+
+    <div id="pool-content"></div>
+  </section>
+
+  <!-- ========== 页面：选品方案列表 ========== -->
+  <section class="page" id="page-schemes">
+    <div class="card">
+      <div class="card-head"><h3>我的选品方案</h3><span class="hint">状态机：Draft → AI_Reviewing → AI_Done → Pending_Approval → Sync → Synced_To_Selection</span></div>
+      <table class="tbl" id="scheme-table"></table>
+    </div>
+  </section>
+
+  <!-- ========== 页面：方案编辑器 ========== -->
+  <section class="page" id="page-editor"></section>
+
+  <!-- ========== 页面：审批队列 ========== -->
+  <section class="page" id="page-approval">
+    <div class="notice info">◈ 负责人视角（AT 品类负责人）。审批 UI <b>不展示</b> generation_source 为推荐文案；可见 AI 建议、Gates、成本、库存结论与全部证据。驳回必须填写原因（服务 KR3 提示词回流）。</div>
+    <div id="approval-content"></div>
+  </section>
+
+  <!-- ========== 页面：回执 ========== -->
+  <section class="page" id="page-receipt">
+    <div class="notice info">◈ 审批通过后同事务写入：审批事件 + outbox + 主状态 Sync_Pending。成功 → Synced_To_Selection；失败 ≤5 次重试 → Sync_Abandoned。所有写入均带 <span class="mono">generation_source=system_hub_at</span>（DB 约束）。</div>
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-head"><h3>写入选款回执</h3><span class="hint">selection_scheme_sync_outbox</span></div>
+      <table class="tbl" id="receipt-table"></table>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3>落地链路追踪（写入选款之后）</h3><span class="hint">goods_id 贯穿：打版 → 生管生产 → 商品信息准备 → 上架 → 销量回流</span></div>
+      <table class="tbl">
+        <tr><th>款（goods_id）</th><th>打版</th><th>生管系统</th><th>商品信息准备</th><th>上架</th><th>30 天销量 / GMV</th></tr>
+        <tr>
+          <td class="mono">AZ-P-87901<br><span class="muted">缎面方领长裙 · 正向改款</span></td>
+          <td><span class="tag green">完成 06-12</span></td>
+          <td><span class="tag green">MPS-24187 · 完工</span></td>
+          <td><span class="tag green">图文/尺码/翻译 ✓</span></td>
+          <td><span class="tag green">06-30 已上架</span></td>
+          <td><b>217 件 · $21.3K</b> <span class="delta-up">↑品类均值 2.1×</span></td>
+        </tr>
+        <tr>
+          <td class="mono">AZ-P-88123<br><span class="muted">Corset 开衩礼服 · 纯新款</span></td>
+          <td><span class="tag green">完成 07-08</span></td>
+          <td><span class="tag gold">MPS-24460 · 生产中（面料齐套 07-30）</span></td>
+          <td><span class="tag gold">摄影排期中</span></td>
+          <td class="muted">预计 08-14</td>
+          <td class="muted">上架后自动回流</td>
+        </tr>
+        <tr>
+          <td class="mono">AZ-P-88245<br><span class="muted">AZ6520 修复款 · 负向改款</span></td>
+          <td><span class="tag gold">打版中（第 2 版样衣）</span></td>
+          <td class="muted">待打版确认</td>
+          <td class="muted">—</td>
+          <td class="muted">—</td>
+          <td class="muted">—</td>
+        </tr>
+        <tr><td colspan="6" class="muted" style="font-size:11px">※ 下游各环节状态从生管 / PIM / 上架系统只读同步；每个环节的时效都会影响增量兑现速度，卡点会在总览「落地链路」漏斗中体现。</td></tr>
+      </table>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<div id="toast"></div>
+<div class="modal-mask" id="modal-mask" onclick="if(event.target===this)closeModal()"><div class="modal" id="modal-body"></div></div>
+
+<script>
+/* ================================================================
+   Mock 数据
+================================================================ */
+const SW = {  // 色卡
+  emerald:"linear-gradient(160deg,#2e6b52,#174233)", champagne:"linear-gradient(160deg,#e8d5ae,#c9ab72)",
+  dustyblue:"linear-gradient(160deg,#8ba7c4,#5d7d9e)", burgundy:"linear-gradient(160deg,#8a3048,#5a1c2e)",
+  blush:"linear-gradient(160deg,#eec4c6,#d59a9e)", black:"linear-gradient(160deg,#3a3a3e,#1a1a1d)",
+  ivory:"linear-gradient(160deg,#f4eee0,#ddd2b8)", sage:"linear-gradient(160deg,#a9bda4,#7d967a)",
+  cobalt:"linear-gradient(160deg,#3556a8,#1e3468)", terracotta:"linear-gradient(160deg,#c26a45,#8f4527)"
+};
+
+/* 机会池 —— 四个池 */
+const OPPS = [
+  /* 销量池（sales_proxy）：纯新款为主 */
+  {id:"AT-W31b2-BB-satin-cowl:::emerald", pool:"sales", scenario:"new", site:"Babyboo", name:"Cowl Neck Satin Maxi", color:"Emerald", sw:"emerald",
+   list_rank:3, prev_rank:null, new_type:"新 SKC", price:"$89", rank_semantics:"sales_proxy",
+   sig:{radar:true, ads:{on:true,days:18,note:"Meta 在投 18 天，3 组素材"}, email:{on:true,pos:"Hero",note:"07-24 Newsletter 头图主推"}, social:{on:true,n:2}, internal:"unknown"},
+   note:"竞品上新即冲到列表第 3，广告+邮件双重加码，强信号纯新款。"},
+  {id:"AT-W31b2-CLL-corset-split:::cobalt", pool:"sales", scenario:"new", site:"Club L London", name:"Corset Bodice Split Gown", color:"Cobalt", sw:"cobalt",
+   list_rank:7, prev_rank:22, new_type:"新颜色", price:"£75", rank_semantics:"sales_proxy",
+   sig:{radar:true, ads:{on:true,days:9,note:"TikTok 在投 9 天"}, email:{on:false}, social:{on:true,n:1}, internal:"good"},
+   note:"同款既有色表现好，新色一周内从 22 冲到 7。"},
+  {id:"AT-W31b2-BB-offshoulder:::blush", pool:"sales", scenario:"new", site:"Babyboo", name:"Off-Shoulder Mermaid", color:"Blush", sw:"blush",
+   list_rank:15, prev_rank:null, new_type:"新 SKC", price:"$79", rank_semantics:"sales_proxy",
+   sig:{radar:true, ads:{on:false}, email:{on:true,pos:"次推位",note:"07-22 邮件次推"}, social:{on:false}, internal:"unknown"},
+   note:"仅雷达+邮件信号，靠前但无广告加码，建议观察一轮。"},
+  {id:"AT-W31b2-CLL-relist:::black", pool:"sales", scenario:"new", site:"Club L London", name:"Square Neck Column Dress", color:"Black", sw:"black",
+   list_rank:31, prev_rank:null, new_type:"下架后又上", price:"£68", rank_semantics:"sales_proxy",
+   sig:{radar:true, ads:{on:false}, email:{on:false}, social:{on:false}, internal:"poor"},
+   note:"老款补货回归；内部同属性 peers 表现差（internal=poor），谨慎。"},
+
+  /* 新到池（recency_proxy） */
+  {id:"AT-W31b2-OP-drape-mini:::ivory", pool:"recency", scenario:"new", site:"Oh Polly", name:"Draped Asymmetric Mini", color:"Ivory", sw:"ivory",
+   list_rank:null, prev_rank:null, new_type:"新 SKC", price:"$95", rank_semantics:"recency_proxy",
+   sig:{radar:true, ads:{on:true,days:21,note:"Meta 在投 21 天 · 高强度"}, email:{on:false}, social:{on:true,n:3}, internal:"unknown"},
+   note:"recency 站无销量排序，但广告在投 21 天 + 3 条社媒好评，可代偿判断热度。"},
+  {id:"AT-W31b2-HOCB-lace-corset:::burgundy", pool:"recency", scenario:"new", site:"House of CB", name:"Lace Corset Midi", color:"Burgundy", sw:"burgundy",
+   list_rank:null, prev_rank:null, new_type:"新颜色", price:"£129", rank_semantics:"recency_proxy",
+   sig:{radar:true, ads:{on:false}, email:{on:true,pos:"Hero",note:"07-25 'New In' 邮件头图"}, social:{on:false}, internal:"good"},
+   note:"仅时间序，禁止称热销；邮件 Hero 位可作意图佐证。"},
+
+  /* 正向改款池：站内热销 × 竞品热卖属性 */
+  {id:"POS-AZ8802", pool:"positive", scenario:"pos", site:"Azazie（站内）", name:"AZ8802 缎面吊带长裙（站内 Top5 热销）", color:"Dusty Blue", sw:"dustyblue",
+   list_rank:null, prev_rank:null, new_type:"—", price:"$99", rank_semantics:"internal",
+   base:{sales:"12m 销量 4,820 · 品类 Top5", ret:"退货率 8.2%（P25 优）"},
+   overlay:{attr:"竞品热卖属性：方领 + 后背绑带", src:"属性榜 集中度 2.6× + 2.8×（热销 Top50 拆解）；载体款均在投广告"},
+   sig:{radar:true, ads:{on:true,days:18,note:"属性来源款在投"}, email:{on:true,pos:"Hero",note:"属性来源款被邮件主推"}, social:{on:true,n:2}, internal:"good"},
+   note:"站内确定性 + 竞品验证过的属性叠加 = 低风险放大。"},
+  {id:"POS-AZ7714", pool:"positive", scenario:"pos", site:"Azazie（站内）", name:"AZ7714 鱼尾礼服（热销复购款）", color:"Emerald", sw:"emerald",
+   list_rank:null, prev_rank:null, new_type:"—", price:"$129", rank_semantics:"internal",
+   base:{sales:"12m 销量 3,105 · 品类 Top12", ret:"退货率 9.8%"},
+   overlay:{attr:"竞品热卖属性：一字肩 + 高开衩", src:"属性榜 集中度 1.9× + 1.5×（Club L 热销 #2 为主要载体款）"},
+   sig:{radar:true, ads:{on:false}, email:{on:true,pos:"次推位",note:"属性来源款邮件次推"}, social:{on:false}, internal:"good"},
+   note:"属性验证信号中等，建议先出 1 色测款。"},
+  {id:"POS-AZ9033", pool:"positive", scenario:"pos", site:"Azazie（站内）", name:"AZ9033 A 字缎面伴娘裙", color:"Sage", sw:"sage",
+   list_rank:null, prev_rank:null, new_type:"—", price:"$89", rank_semantics:"internal",
+   base:{sales:"12m 销量 2,940", ret:"退货率 7.5%（P25 优）"},
+   overlay:{attr:"竞品热卖属性：泡泡袖 + 珠光面料", src:"属性榜 集中度 2.2× + 1.7×；载体款来自新到池，热度由 AD 在投 21 天代偿"},
+   sig:{radar:true, ads:{on:true,days:21,note:"属性来源款高强度在投"}, email:{on:false}, social:{on:true,n:3}, internal:"good"},
+   note:"属性来自 recency 站，热度由广告时长代偿验证。"},
+
+  /* 负向改款池：负反馈驱动 */
+  {id:"NEG-AZ6520", pool:"negative", scenario:"neg", site:"Azazie（站内）", name:"AZ6520 抹胸鱼尾晚礼服", color:"Burgundy", sw:"burgundy",
+   list_rank:null, prev_rank:null, new_type:"—", price:"$119", rank_semantics:"internal",
+   feedback:{ret:"退货率 26.4%（> AT P75）", voc:"VOC「商品问题」：胸垫移位 41 次 / 拉链卡顿 23 次", social:"Ins 翻车帖 1 条（is_negative_viral）"},
+   fix:"改款方向：内置文胸杯替换活动胸垫；换隐形拉链供应商",
+   sig:{radar:false, ads:{on:false}, email:{on:false}, social:{on:true,n:1,neg:true}, internal:"poor"},
+   note:"销量基础好但负反馈集中且可归因到结构，修复价值高。"},
+  {id:"NEG-AZ7101", pool:"negative", scenario:"neg", site:"Azazie（站内）", name:"AZ7101 蕾丝拼接长袖礼服", color:"Ivory", sw:"ivory",
+   list_rank:null, prev_rank:null, new_type:"—", price:"$139", rank_semantics:"internal",
+   feedback:{ret:"退货率 21.8%（> AT P75）", voc:"VOC：袖围偏紧 35 次 / 蕾丝刮丝 18 次", social:"无翻车帖"},
+   fix:"改款方向：袖围放量 +1.5cm 梯度；蕾丝换软手感供应商料",
+   sig:{radar:false, ads:{on:false}, email:{on:false}, social:{on:false}, internal:"poor"},
+   note:"负反馈可修复且成本低，适合负向改款。"}
+];
+
+/* 方案（预置不同状态） */
+let SCHEMES = [
+  {id:"SCH-2026-0087", ver:"v3-a91f", opp:"AT-W31b2-BB-satin-cowl:::emerald", scenario:"new",
+   title:"跟款：Cowl Neck 缎面长裙（Emerald）", status:"Pending_Approval",
+   gates:{no_cost_advantage:false, high_voc_risk:false, internal_signal:"unknown", producibility:"ok", low_inventory_risk:false},
+   cost:{source:"similar_bom", adopted:"$17.8", currency:"USD", suggest:"$89", band:"P25 $72 – P75 $96", band_valid:true},
+   ai:{verdict:"recommend", rule:"R6", evidence_gap:"internal_signal=unknown（无三维同款 peers）"},
+   owner:"林悦", created:"07-27 10:24", intent:"现货"},
+  {id:"SCH-2026-0088", ver:"v2-77c2", opp:"POS-AZ8802", scenario:"pos",
+   title:"正向改款：AZ8802 + 方领/后背绑带", status:"AI_Done",
+   gates:{no_cost_advantage:false, high_voc_risk:false, internal_signal:"good", producibility:"ok", low_inventory_risk:false},
+   cost:{source:"bom", adopted:"$19.6", currency:"USD", suggest:"$98", band:"P25 $84 – P75 $112", band_valid:true},
+   ai:{verdict:"recommend", rule:"R7", evidence_gap:null},
+   owner:"林悦", created:"07-27 14:02", intent:"现货"},
+  {id:"SCH-2026-0089", ver:"v1-3be0", opp:"NEG-AZ6520", scenario:"neg",
+   title:"负向改款：AZ6520 胸垫/拉链结构修复", status:"Draft",
+   gates:{no_cost_advantage:false, high_voc_risk:true, internal_signal:"poor", producibility:"risky", low_inventory_risk:true},
+   cost:{source:"rule_estimate", adopted:"$24.1", currency:"USD", suggest:"$120", band:"—", band_valid:false},
+   ai:null, owner:"林悦", created:"07-28 09:40", intent:"MTO"},
+  {id:"SCH-2026-0085", ver:"v4-c1d8", opp:"AT-W31b2-CLL-corset-split:::cobalt", scenario:"new",
+   title:"跟款：Corset 开衩礼服（Cobalt）", status:"Synced_To_Selection",
+   gates:{no_cost_advantage:false, high_voc_risk:false, internal_signal:"good", producibility:"ok", low_inventory_risk:false},
+   cost:{source:"bom", adopted:"$15.2", currency:"USD", suggest:"$76", band:"P25 $63 – P75 $88", band_valid:true},
+   ai:{verdict:"recommend", rule:"R7", evidence_gap:null},
+   owner:"林悦", created:"07-24 11:10", intent:"现货", synced:"07-26 09:02", goods:"AZ-P-88123"}
+];
+
+/* 市场维度：竞品机会 = 各市场站点列表排名；站内改款 = 各市场销量占比
+   同一款在不同国家的销量表现不同，机会评估与方案目标市场需按市场区分 */
+const MKT = {US:'美国', UK:'英国', AU:'澳洲'};
+const MK_DATA = {
+  'AT-W31b2-BB-satin-cowl:::emerald': {AU:3, US:9},
+  'AT-W31b2-CLL-corset-split:::cobalt': {UK:7, US:18},
+  'AT-W31b2-BB-offshoulder:::blush': {AU:15},
+  'AT-W31b2-CLL-relist:::black': {UK:31},
+  'AT-W31b2-OP-drape-mini:::ivory': {UK:null, US:null},
+  'AT-W31b2-HOCB-lace-corset:::burgundy': {UK:null},
+  'POS-AZ8802': {US:'62%', UK:'23%', AU:'15%'},
+  'POS-AZ7714': {US:'48%', UK:'37%', AU:'15%'},
+  'POS-AZ9033': {US:'71%', UK:'18%', AU:'11%'},
+  'NEG-AZ6520': {US:'55%', UK:'30%', AU:'15%'},
+  'NEG-AZ7101': {US:'40%', UK:'45%', AU:'15%'}
+};
+OPPS.forEach(o=>o.mk=MK_DATA[o.id]||null);
+
+const SC_LABEL = {new:['纯新款','sc-new'], pos:['正向改款','sc-pos'], neg:['负向改款','sc-neg']};
+const VERDICT = {
+  recommend:['建议推','recommend'], cautious:['谨慎推','cautious'],
+  mto:['建议 MTO','mto'], reject:['不建议推','reject']
+};
+
+/* ================================================================
+   工具
+================================================================ */
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2600);
+}
+function openModal(html){document.getElementById('modal-body').innerHTML=html;document.getElementById('modal-mask').classList.add('show')}
+function closeModal(){document.getElementById('modal-mask').classList.remove('show')}
+function sigRow(s){
+  let h='<div class="sig-row">';
+  h+= s.radar?'<span class="sig sig-radar">雷达</span>':'';
+  h+= s.ads&&s.ads.on?`<span class="sig sig-ads" title="${s.ads.note}">AD 在投 ${s.ads.days}d</span>`:'<span class="sig off">AD —</span>';
+  h+= s.email&&s.email.on?`<span class="sig sig-email" title="${s.email.note}">EDM ${s.email.pos}</span>`:'<span class="sig off">EDM —</span>';
+  h+= s.social&&s.social.on?`<span class="sig sig-social">${s.social.neg?'⚠ 翻车':'社媒 ×'+s.social.n}</span>`:'<span class="sig off">社媒 —</span>';
+  const im={good:['内部 good','sig-internal'],poor:['内部 poor','sig-social'],unknown:['内部 unknown','off']}[s.internal]||['内部 —','off'];
+  h+=`<span class="sig ${im[1]==='off'?'off':im[1]}">${im[0]}</span></div>`;
+  return h;
+}
+const PAGES={dashboard:'总览摘要',monitor:'监控报告',pool:'机会池',schemes:'选品方案',editor:'方案编辑',approval:'审批队列（负责人）',receipt:'写入选款回执',mapping:'属性映射表（AI × 人工共维）'};
+function go(p){
+  document.querySelectorAll('.page').forEach(e=>e.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(e=>e.classList.toggle('active',e.dataset.page===p));
+  document.getElementById('page-title').textContent=PAGES[p];
+  window.scrollTo({top:0});
+  if(p==='schemes')renderSchemes();
+  if(p==='approval')renderApproval();
+  if(p==='receipt')renderReceipt();
+}
+
+/* ================================================================
+   监控报告
+================================================================ */
+function mtab(t){
+  document.querySelectorAll('#monitor-tabs .tab').forEach(e=>e.classList.toggle('active',e.dataset.mtab===t));
+  document.querySelectorAll('.mpanel').forEach(e=>e.style.display='none');
+  document.getElementById('mpanel-'+t).style.display='block';
+}
+function renderMonitor(){
+  document.getElementById('radar-table').innerHTML = `
+    <tr><th>竞品站</th><th>各市场排名</th><th>款 / 色</th><th>动态</th><th>官网排第几</th><th>排名能当销量看吗</th><th>证据底稿</th></tr>
+    <tr><td>Babyboo</td><td><span class="sig mkt">AU #3</span> <span class="sig mkt">US #9</span></td><td>Cowl Neck Satin Maxi · Emerald</td><td><span class="tag accent">上新 · 全新款</span></td><td class="rank-num">3</td><td><span class="tag green">能（卖得好才靠前）</span></td><td class="mono">底稿行#0412</td></tr>
+    <tr><td>Club L London</td><td><span class="sig mkt">UK #7</span> <span class="sig mkt">US #18</span></td><td>Corset Bodice Split Gown · Cobalt</td><td><span class="tag accent">上新 · 老款新色</span></td><td class="rank-num">7</td><td><span class="tag green">能（卖得好才靠前）</span></td><td class="mono">底稿行#0977</td></tr>
+    <tr><td>Oh Polly</td><td><span class="sig mkt">UK</span> <span class="sig mkt">US</span></td><td>Draped Asymmetric Mini · Ivory</td><td><span class="tag accent">上新 · 全新款</span></td><td class="muted">—（按上架时间排）</td><td><span class="tag gold">不能（新上架就靠前）</span></td><td class="mono">底稿行#1203</td></tr>
+    <tr><td>House of CB</td><td><span class="sig mkt">UK</span></td><td>Lace Corset Midi · Burgundy</td><td><span class="tag accent">上新 · 老款新色</span></td><td class="muted">—（按上架时间排）</td><td><span class="tag gold">不能（新上架就靠前）</span></td><td class="mono">底稿行#1388</td></tr>
+    <tr><td>Club L London</td><td><span class="sig mkt">UK #31</span></td><td>Square Neck Column · Black</td><td><span class="tag gold">下架后又回归</span></td><td class="rank-num">31</td><td><span class="tag green">能（卖得好才靠前）</span></td><td class="mono">底稿行#1050</td></tr>
+    <tr><td>Babyboo</td><td><span class="sig mkt">AU</span></td><td>Ruched Bodycon Mini · Pink</td><td><span class="tag gray">下架</span>（仅记录动态，不进机会池）</td><td class="muted">—</td><td class="muted">—</td><td class="mono">底稿行#0655</td></tr>
+    <tr><td colspan="7" class="muted" style="font-size:11px">※ 「排名能当销量看吗」取决于竞品站的列表规则：Babyboo、Club L 按销量排，排第 3 ≈ 热销第 3；Oh Polly、House of CB 按上架时间排，排前面只代表最新——这也是销量池和新到池分开的原因。每行都能回溯到爬取底稿，供审批时核对证据。</td></tr>`;
+
+  document.getElementById('ads-table').innerHTML = `
+    <tr><th>品牌</th><th>投放款</th><th>平台</th><th>投放市场</th><th>在投天数</th><th>素材数</th><th>强度判断</th><th>关联机会</th></tr>
+    <tr><td>Oh Polly</td><td>Draped Asymmetric Mini</td><td>Meta</td><td><span class="sig mkt">US</span> <span class="sig mkt">UK</span></td><td class="rank-num">21</td><td>5</td><td><span class="tag red">高（长投+多素材）</span></td><td><a href="#" onclick="go('pool');ptab('recency');return false" style="color:var(--accent)">新到池 →</a></td></tr>
+    <tr><td>Babyboo</td><td>Cowl Neck Satin Maxi</td><td>Meta</td><td><span class="sig mkt">AU</span> <span class="sig mkt">US</span></td><td class="rank-num">18</td><td>3</td><td><span class="tag red">高</span></td><td><a href="#" onclick="go('pool');ptab('sales');return false" style="color:var(--accent)">销量池 →</a></td></tr>
+    <tr><td>Club L London</td><td>Corset Bodice Split Gown</td><td>TikTok</td><td><span class="sig mkt">UK</span></td><td class="rank-num">9</td><td>2</td><td><span class="tag gold">中</span></td><td><a href="#" onclick="go('pool');ptab('sales');return false" style="color:var(--accent)">销量池 →</a></td></tr>
+    <tr><td>Babyboo</td><td>Halter Sequin Gown</td><td>Meta</td><td><span class="sig mkt">AU</span></td><td class="rank-num">4</td><td>1</td><td><span class="tag gray">低（观察）</span></td><td class="muted">未入池</td></tr>
+    <tr><td>House of CB</td><td>Bandage Corset Dress</td><td>TikTok</td><td><span class="sig mkt">UK</span></td><td class="rank-num">2</td><td>1</td><td><span class="tag gray">低（新开投）</span></td><td class="muted">未入池</td></tr>`;
+
+  document.getElementById('email-table').innerHTML = `
+    <tr><th>品牌</th><th>邮件主题</th><th>收件市场</th><th>发送时间</th><th>主推位商品</th><th>位序</th><th>关联机会</th></tr>
+    <tr><td>Babyboo</td><td>"NEW: The Satin Edit 🖤"</td><td><span class="sig mkt">AU</span> <span class="sig mkt">US</span></td><td>07-24</td><td>Cowl Neck Satin Maxi</td><td><span class="tag accent">Hero 头图</span></td><td><a href="#" onclick="go('pool');ptab('sales');return false" style="color:var(--accent)">销量池 →</a></td></tr>
+    <tr><td>House of CB</td><td>"New In: Corsetry Season"</td><td><span class="sig mkt">UK</span></td><td>07-25</td><td>Lace Corset Midi</td><td><span class="tag accent">Hero 头图</span></td><td><a href="#" onclick="go('pool');ptab('recency');return false" style="color:var(--accent)">新到池 →</a></td></tr>
+    <tr><td>Babyboo</td><td>"Weekend Drop"</td><td><span class="sig mkt">AU</span></td><td>07-22</td><td>Off-Shoulder Mermaid</td><td><span class="tag gold">次推位</span></td><td><a href="#" onclick="go('pool');ptab('sales');return false" style="color:var(--accent)">销量池 →</a></td></tr>
+    <tr><td>Club L London</td><td>"Occasion Edit — up to 30%"</td><td><span class="sig mkt">UK</span></td><td>07-23</td><td>Puff Sleeve Midi（促销款）</td><td><span class="tag gray">促销位（不计主推信号）</span></td><td class="muted">—</td></tr>
+    <tr><td colspan="7" class="muted" style="font-size:11px">※ 竞品对不同市场的订阅列表可能发不同邮件、推不同款；订阅收件箱按市场分别注册（US / UK / AU 各一）。</td></tr>`;
+
+  document.getElementById('social-table').innerHTML = `
+    <tr><th>平台</th><th>关联对象</th><th>内容摘要</th><th>翻车</th><th>版本</th><th>录入</th></tr>
+    <tr><td>Instagram</td><td class="mono">opp: BB-satin-cowl</td><td>穿搭博主 @miagraces 好评，评论区求链接 ×47</td><td><span class="tag green">否</span></td><td>v1</td><td>林悦 07-27</td></tr>
+    <tr><td>Instagram</td><td class="mono">opp: OP-drape-mini</td><td>3 条 Reels 合计 120w 播放，正向</td><td><span class="tag green">否</span></td><td>v2</td><td>林悦 07-27</td></tr>
+    <tr><td>Instagram</td><td class="mono">scheme: SCH-0089 (AZ6520)</td><td>用户吐槽胸垫移位「walked out of my dress」，2.3w 赞</td><td><span class="tag red">是 · is_negative_viral</span></td><td>v1</td><td>陈可 07-26</td></tr>
+    <tr><td>TikTok</td><td class="mono">opp: CLL-corset-split</td><td>开箱视频正向，转化评论多</td><td><span class="tag green">否</span></td><td>v1</td><td>林悦 07-25</td></tr>`;
+
+  document.getElementById('internal-table').innerHTML = `
+    <tr><th>我们的款</th><th>长什么样</th><th>近 12 月卖了多少</th><th>退货率</th><th>业务结论 → 影响哪个机会</th><th>相似程度</th></tr>
+    <tr>
+      <td><b>AZ8802</b><br><span class="muted">缎面吊带长裙</span></td><td>缎面 · 吊带A字 · 雾蓝</td>
+      <td><b>4,820 件</b>（品类前 5）</td><td>8.2%（优）</td>
+      <td><span class="tag green">加分</span> 这类款我们验证过能卖 → 作为<b>正向改款</b>的底座（叠加竞品方领属性）</td>
+      <td>三维全中</td>
+    </tr>
+    <tr>
+      <td><b>AZ7714</b><br><span class="muted">鱼尾礼服</span></td><td>缎面 · 鱼尾 · 祖母绿</td>
+      <td><b>3,105 件</b></td><td>9.8%</td>
+      <td><span class="tag green">加分</span> 鱼尾+缎面组合有稳定复购 → 支撑同类竞品机会</td>
+      <td>三维全中</td>
+    </tr>
+    <tr>
+      <td><b>AZ6520</b><br><span class="muted">抹胸鱼尾晚礼服</span></td><td>缎面 · 抹胸鱼尾 · 酒红</td>
+      <td>2,210 件</td><td><b style="color:var(--red)">26.4%</b>（远超品类正常线）</td>
+      <td><span class="tag red">预警</span> 卖得动但退货太高，问题在胸垫/拉链 → 产出<b>负向改款</b>机会</td>
+      <td>三维全中</td>
+    </tr>
+    <tr>
+      <td><b>AZ7101</b><br><span class="muted">蕾丝长袖礼服</span></td><td>蕾丝 · 长袖直筒 · 象牙</td>
+      <td>1,840 件</td><td><b style="color:var(--red)">21.8%</b>（超正常线）</td>
+      <td><span class="tag red">预警</span> 袖围偏紧+面料刮丝 → 产出<b>负向改款</b>机会</td>
+      <td>三维全中</td>
+    </tr>
+    <tr>
+      <td><b>AZ5210</b><br><span class="muted">方领直身裙</span></td><td>缎面 · 方领直身 · 黑</td>
+      <td>310 件（品类垫底段）</td><td>14.1%</td>
+      <td><span class="tag gold">减分</span> 相似款我们卖不动 → 销量池 Club L「方领直身·黑」机会被标"内部表现差"，AI 转谨慎</td>
+      <td>放宽了颜色</td>
+    </tr>
+    <tr><td colspan="6" class="muted" style="font-size:11px">※ 找不到相似款时（如 Babyboo 的垂领缎面裙，我们从没做过）标为「<b>无参考</b>」：既不加分也不减分，AI 建议会明确写"内部无验证数据"，禁止当成没风险。相似度不够时按 ①放宽颜色 ②放宽面料 逐级降低匹配要求，并如实标注。</td></tr>`;
+}
+
+/* ================================================================
+   机会池
+================================================================ */
+let curPool='sales';
+let curMarket='all';
+function setMarket(m){
+  curMarket=m;
+  renderPool();
+  toast(m==='all'?'已切换到全部市场':'已切换到 '+MKT[m]+' '+m+' 市场：机会与排名按该市场口径展示');
+}
+function inMarket(o){return curMarket==='all'||(o.mk&&curMarket in o.mk)}
+function mkChips(o){
+  if(!o.mk)return'';
+  return '<div class="sig-row" style="margin-top:4px">'+Object.entries(o.mk).map(([m,v])=>
+    `<span class="sig mkt ${curMarket===m?'on':''}">${m}${typeof v==='number'?' #'+v:(v?' '+v:' 新到')}</span>`).join('')+'</div>';
+}
+function ptab(t){
+  curPool=t;
+  document.querySelectorAll('[data-ptab]').forEach(e=>e.classList.toggle('active',e.dataset.ptab===t));
+  const f=document.getElementById('pool-filters');
+  f.style.display=(t==='sales')?'flex':'none';
+  renderPool();
+}
+function renderPool(){
+  ['sales','recency','positive','negative'].forEach(p=>{
+    const el=document.getElementById('cnt-'+p);
+    if(el)el.textContent=OPPS.filter(o=>o.pool===p&&inMarket(o)).length;
+  });
+  document.getElementById('nav-pool-cnt').textContent=OPPS.filter(inMarket).length;
+
+  let list=OPPS.filter(o=>o.pool===curPool&&inMarket(o));
+  const rankOf=o=>(curMarket!=='all'&&o.mk&&typeof o.mk[curMarket]==='number')?o.mk[curMarket]:o.list_rank;
+  if(curPool==='sales')list=[...list].sort((a,b)=>(rankOf(a)??999)-(rankOf(b)??999));
+  let html='';
+  if(curMarket!=='all'){
+    html+=`<div class="notice info">◈ 当前按 <b>${MKT[curMarket]} ${curMarket}</b> 市场口径：竞品机会显示该市场站点的列表排名，改款机会显示该款在该市场的销量占比。同一款在不同市场表现可能完全不同，跨市场不混排。</div>`;
+  }
+
+  if(curPool==='sales'||curPool==='recency'){
+    if(curPool==='recency'){
+      html+=`<div class="notice warn">⚠ recency_proxy 站（Oh Polly / House of CB）按上架时间排序，<b>禁止与销量池混排、禁止统称「热销」</b>。热度请参考 AD 在投时长 / EDM 主推 / 社媒信号代偿判断。</div>`;
+    }
+    html+=`<div class="card"><table class="tbl">
+      <tr><th></th><th>款 / 色（skc_key）</th><th>站点</th><th>${curPool==='sales'?'list_rank':'上架序'}</th><th>上新类型</th><th>竞品价</th><th>信号组合</th><th>场景预判</th><th></th></tr>`;
+    list.forEach(o=>{
+      html+=`<tr class="clickable" onclick="oppDetail('${o.id}')">
+        <td><div class="swatch" style="background:${SW[o.sw]}"></div></td>
+        <td><b>${o.name}</b><br><span class="muted" style="font-size:11px">${o.color} · <span class="mono">${o.id.split('-').pop()}</span></span></td>
+        <td>${o.site}${mkChips(o)}</td>
+        <td>${(()=>{const r=(curMarket!=='all'&&o.mk&&typeof o.mk[curMarket]==='number')?o.mk[curMarket]:o.list_rank;
+          return r?`<span class="rank-num">#${r}</span> ${curMarket!=='all'?'<span class="muted" style="font-size:10px">'+curMarket+' 站</span> ':''}${o.prev_rank&&curMarket==='all'?`<span class="delta-up">↑${o.prev_rank-r}</span>`:'<span class="delta-new">NEW</span>'}`:'<span class="muted">新到序</span>'})()}</td>
+        <td><span class="tag ${o.new_type==='下架后又上'?'gold':'accent'}">${o.new_type}</span></td>
+        <td><b>${o.price}</b></td>
+        <td>${sigRow(o.sig)}</td>
+        <td><span class="scenario ${SC_LABEL[o.scenario][1]}">${SC_LABEL[o.scenario][0]}</span></td>
+        <td><button class="btn sm primary" onclick="event.stopPropagation();makeDraft('${o.id}')">生成草稿</button></td>
+      </tr>`;
+    });
+    html+='</table></div>';
+  }
+
+  if(curPool==='positive'){
+    html+=`<div class="notice info">◈ 正向改款 = <b>站内热销款（确定性底座）× 竞品热卖属性（增量方向）</b>。下方属性榜展示属性是怎么被算出来的：先把竞品款按统一维度拆解打标，再看哪些属性在热销款里的占比<b>远高于</b>它在全部在售款里的占比（集中度倍数），最后用广告/邮件信号加码验证。</div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-head"><h3>竞品热卖属性榜</h3><span class="hint">本批次 · 热销 Top50 款拆解 · 集中度 ≥1.5× 才上榜</span></div>
+      <table class="tbl">
+        <tr><th>属性（维度）</th><th>热销款中出现</th><th>集中度：热销占比 vs 全站占比</th><th>竞品加码信号</th><th>趋势</th><th>组合状态</th></tr>
+        <tr>
+          <td><b>方领</b> <span class="muted">（领形）</span></td><td>9 / 50 款</td>
+          <td>18% vs 7% = <b style="color:var(--accent)">2.6×</b></td>
+          <td><span class="sig sig-ads">2 款在投广告</span></td>
+          <td><span class="delta-up">↑ 连续 3 周上升</span></td>
+          <td><span class="tag green">已组合 → AZ8802 机会</span></td>
+        </tr>
+        <tr>
+          <td><b>后背绑带</b> <span class="muted">（背部设计）</span></td><td>6 / 50 款</td>
+          <td>14% vs 5% = <b style="color:var(--accent)">2.8×</b></td>
+          <td><span class="sig sig-email">1 款邮件 Hero</span></td>
+          <td><span class="delta-up">↑ 连续 2 周上升</span></td>
+          <td><span class="tag green">已组合 → AZ8802 机会</span></td>
+        </tr>
+        <tr>
+          <td><b>一字肩</b> <span class="muted">（领形）</span></td><td>5 / 50 款</td>
+          <td>11% vs 6% = <b>1.9×</b></td>
+          <td class="muted">—</td>
+          <td>→ 持平</td>
+          <td><span class="tag green">已组合 → AZ7714 机会</span></td>
+        </tr>
+        <tr>
+          <td><b>泡泡袖</b> <span class="muted">（袖型）</span></td><td>4 / 50 款</td>
+          <td>9% vs 4% = <b>2.2×</b></td>
+          <td><span class="sig sig-ads">来源款在投 21 天（新到池代偿）</span></td>
+          <td><span class="delta-up">↑ 上升</span></td>
+          <td><span class="tag green">已组合 → AZ9033 机会</span></td>
+        </tr>
+        <tr>
+          <td><b>珠光缎</b> <span class="muted">（面料）</span></td><td>4 / 50 款</td>
+          <td>8% vs 5% = <b>1.7×</b></td>
+          <td class="muted">—</td>
+          <td><span class="delta-up">↑ 上升</span></td>
+          <td><span class="tag gold">待组合：站内无匹配热销底座，可考虑纯新款路线</span></td>
+        </tr>
+        <tr>
+          <td><b>高开衩</b> <span class="muted">（下摆）</span></td><td>7 / 50 款</td>
+          <td>15% vs 10% = <b>1.5×</b></td>
+          <td><span class="sig sig-ads">1 款在投</span></td>
+          <td>→ 持平</td>
+          <td><span class="tag gold">待组合：候选底座 AZ7714（已含一字肩组合，避免一次改两处）</span></td>
+        </tr>
+        <tr><td colspan="6" class="muted" style="font-size:11px">※ 为什么看集中度不看绝对数量：缎面在礼服站永远出现最多，那是品类常态不是信号；只有「热销款里不成比例地多」的属性才说明卖点。竞品款与自家款用同一套属性维度打标（图片识别 + 详情文本抽取 + 人工抽检），因此属性可以直接映射到站内底座款上。</td></tr>
+      </table>
+    </div>`;
+    list.forEach(o=>{
+      html+=`<div class="card" style="margin-bottom:14px"><div class="card-body" style="display:flex;gap:16px;align-items:flex-start">
+        <div class="swatch lg" style="background:${SW[o.sw]}"></div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <b style="font-size:14px">${o.name}</b><span class="scenario sc-pos">正向改款</span>
+          </div>
+          <div style="display:flex;gap:24px;font-size:12px;margin-bottom:6px;align-items:center">
+            <span>📈 ${o.base.sales}</span><span>↩ ${o.base.ret}</span>
+          </div>
+          <div style="margin-bottom:8px;display:flex;align-items:center;gap:6px"><span class="muted" style="font-size:10.5px">销量分布</span>${mkChips(o)}</div>
+          <div style="background:var(--green-soft);border-radius:7px;padding:9px 12px;font-size:12px;margin-bottom:8px">
+            <b>叠加属性</b>：${o.overlay.attr}<br><span class="muted" style="font-size:11px">来源：${o.overlay.src}</span>
+          </div>
+          ${sigRow(o.sig)}
+        </div>
+        <button class="btn sm primary" onclick="makeDraft('${o.id}')">生成草稿</button>
+      </div></div>`;
+    });
+  }
+
+  if(curPool==='negative'){
+    html+=`<div class="notice warn">⚠ 负向改款 = 根据<b>用户负反馈</b>（VOC 商品问题 P75 / 高退货率 / 社媒翻车）对在售款做结构性修复。翻车帖自动触发 high_voc_risk 支路。</div>`;
+    list.forEach(o=>{
+      html+=`<div class="card" style="margin-bottom:14px"><div class="card-body" style="display:flex;gap:16px;align-items:flex-start">
+        <div class="swatch lg" style="background:${SW[o.sw]}"></div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <b style="font-size:14px">${o.name}</b><span class="scenario sc-neg">负向改款</span>
+          </div>
+          <div style="background:var(--red-soft);border-radius:7px;padding:9px 12px;font-size:12px;margin-bottom:6px">
+            <b>负反馈证据</b>：${o.feedback.ret}<br>${o.feedback.voc}<br><span class="muted" style="font-size:11px">${o.feedback.social}</span>
+          </div>
+          <div style="margin-bottom:8px;display:flex;align-items:center;gap:6px"><span class="muted" style="font-size:10.5px">销量分布</span>${mkChips(o)}</div>
+          <div style="background:var(--panel2);border-radius:7px;padding:9px 12px;font-size:12px;margin-bottom:8px">🛠 ${o.fix}</div>
+          ${sigRow(o.sig)}
+        </div>
+        <button class="btn sm primary" onclick="makeDraft('${o.id}')">生成草稿</button>
+      </div></div>`;
+    });
+  }
+  document.getElementById('pool-content').innerHTML=html;
+}
+function oppDetail(id){
+  const o=OPPS.find(x=>x.id===id);
+  openModal(`<h3>${o.name} <span class="muted" style="font-size:12px">· ${o.color}</span></h3>
+    <div style="display:flex;gap:16px;margin-bottom:14px">
+      <div class="swatch lg" style="background:${SW[o.sw]}"></div>
+      <div style="font-size:12px;line-height:2">
+        <span class="mono">opportunity_id: ${o.id}</span><br>
+        站点 ${o.site} · data_week 2026-W31 · ${o.list_rank?'list_rank #'+o.list_rank:'recency 序'}<br>
+        <span class="mono">snapshot_id: at_report_20260727.xlsx · 可回溯 ✓</span>
+      </div>
+    </div>
+    ${sigRow(o.sig)}
+    <hr class="sep"><p style="font-size:12.5px">${o.note}</p>
+    <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn" onclick="closeModal()">关闭</button>
+      <button class="btn primary" onclick="closeModal();makeDraft('${o.id}')">生成方案草稿</button>
+    </div>`);
+}
+function makeDraft(id){
+  const o=OPPS.find(x=>x.id===id);
+  toast('已从机会创建方案草稿（POST /at/schemes）');
+  openEditor(null,o);
+}
+
+/* ================================================================
+   方案列表 / 编辑器
+================================================================ */
+function renderSchemes(){
+  let h=`<tr><th>方案 ID</th><th>标题</th><th>场景</th><th>状态</th><th>AI 建议</th><th>销售意向</th><th>创建</th><th></th></tr>`;
+  SCHEMES.forEach(s=>{
+    h+=`<tr class="clickable" onclick="openEditor('${s.id}')">
+      <td class="mono">${s.id}<br><span style="color:var(--ink3)">${s.ver}</span></td>
+      <td><b>${s.title}</b></td>
+      <td><span class="scenario ${SC_LABEL[s.scenario][1]}">${SC_LABEL[s.scenario][0]}</span></td>
+      <td><span class="status-badge st-${s.status}">${s.status}</span></td>
+      <td>${s.ai?`<span class="tag ${{recommend:'green',cautious:'gold',mto:'blue',reject:'red'}[s.ai.verdict]}">${VERDICT[s.ai.verdict][0]}</span>`:'<span class="muted">—</span>'}</td>
+      <td>${s.intent}</td><td class="muted">${s.created}</td>
+      <td><button class="btn sm" onclick="event.stopPropagation();openEditor('${s.id}')">打开</button></td>
+    </tr>`;
+  });
+  document.getElementById('scheme-table').innerHTML=h;
+  document.getElementById('nav-scheme-cnt').textContent=SCHEMES.length;
+  document.getElementById('nav-appr-cnt').textContent=SCHEMES.filter(s=>s.status==='Pending_Approval').length;
+}
+
+let curScheme=null;
+function openEditor(schemeId, fromOpp){
+  let s;
+  if(schemeId){ s=SCHEMES.find(x=>x.id===schemeId); }
+  else{
+    const o=fromOpp;
+    s={id:"SCH-2026-00"+(90+SCHEMES.length), ver:"v1-"+Math.random().toString(16).slice(2,6), opp:o.id,
+       scenario:o.scenario, title:(o.scenario==='pos'?'正向改款：':o.scenario==='neg'?'负向改款：':'跟款：')+o.name,
+       status:"Draft",
+       gates:{no_cost_advantage:false, high_voc_risk:!!(o.sig.social&&o.sig.social.neg), internal_signal:o.sig.internal, producibility:"unknown", low_inventory_risk:false},
+       cost:{source:"—", adopted:null, currency:"USD", suggest:null, band:"待解析", band_valid:false},
+       ai:null, owner:"林悦", created:"07-28 "+new Date().toTimeString().slice(0,5), intent:"现货", isNew:true};
+    SCHEMES.unshift(s);
+  }
+  curScheme=s;
+  renderEditor();
+  go('editor');
+  document.getElementById('page-title').textContent='方案编辑 · '+s.id;
+}
+
+function gateHtml(g){
+  const rows=[
+    ['no_cost_advantage', g.no_cost_advantage, g.no_cost_advantage?'bad':'ok', g.no_cost_advantage?'true · 建议价高于价带 P75':'false · 价带内'],
+    ['high_voc_risk', g.high_voc_risk, g.high_voc_risk?'bad':'ok', g.high_voc_risk?'true · 社媒翻车/VOC P75':'false'],
+    ['internal_signal', g.internal_signal, {good:'ok',poor:'bad',unknown:'unknown'}[g.internal_signal], g.internal_signal],
+    ['producibility', g.producibility, {ok:'ok',risky:'warn',unknown:'unknown'}[g.producibility], g.producibility + (g.low_inventory_risk?' · low_inventory_risk':'')],
+  ];
+  return rows.map(r=>`<div class="gate"><span class="dot ${r[2]}"></span><span class="mono">${r[0]}</span><span class="val">${r[3]}</span></div>`).join('');
+}
+
+function renderEditor(){
+  const s=curScheme;
+  const o=OPPS.find(x=>x.id===s.opp)||{};
+  const el=document.getElementById('page-editor');
+
+  const stFlow=['Draft','AI_Reviewing','AI_Done','Pending_Approval','Sync_Pending','Synced_To_Selection'];
+  const stIdx=stFlow.indexOf(s.status);
+
+  el.innerHTML=`
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+    <button class="btn ghost sm" onclick="go('schemes')">← 返回列表</button>
+    <span class="scenario ${SC_LABEL[s.scenario][1]}">${SC_LABEL[s.scenario][0]}</span>
+    <b style="font-size:15px">${s.title}</b>
+    <span class="status-badge st-${s.status}">${s.status}</span>
+    <span class="mono" style="margin-left:auto">scheme_version=${s.ver}</span>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:18px">
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head"><h3>① 参考与场景</h3></div>
+        <div class="card-body">
+          <div style="display:flex;gap:14px;margin-bottom:12px">
+            <div class="swatch lg" style="background:${SW[o.sw]||SW.ivory}"></div>
+            <div style="font-size:12px;line-height:1.9">
+              <b>${o.name||'—'}</b> · ${o.color||''}<br>
+              <span class="mono">opportunity: ${s.opp}</span><br>
+              <span class="mono muted">snapshot 可回溯 · source_line=atelier ✓</span>
+            </div>
+          </div>
+          <div class="field"><label>场景类型 <span class="req">*</span></label>
+            <select ${s.status!=='Draft'?'disabled':''} onchange="curScheme.scenario=this.value;renderEditor()">
+              <option value="new" ${s.scenario==='new'?'selected':''}>纯新款（竞品上新×热销跟款）</option>
+              <option value="pos" ${s.scenario==='pos'?'selected':''}>正向改款（站内热销款 × 竞品热卖属性）</option>
+              <option value="neg" ${s.scenario==='neg'?'selected':''}>负向改款（用户负反馈修复）</option>
+            </select>
+          </div>
+          ${s.scenario==='pos'?`<div class="field"><label>基础款（站内热销）<span class="req">*</span></label><input type="text" value="${o.id&&o.id.startsWith('POS')?o.name:'AZ____ 请选择站内热销款'}" ${s.status!=='Draft'?'disabled':''}><div class="sub">正向改款必填：确定性底座来源</div></div>
+          <div class="field"><label>叠加的竞品热卖属性 <span class="req">*</span></label><textarea ${s.status!=='Draft'?'disabled':''}>${o.overlay?o.overlay.attr+'（来源：'+o.overlay.src+'）':''}</textarea></div>`:''}
+          ${s.scenario==='neg'?`<div class="field"><label>负反馈证据（VOC / 退货 / 翻车）<span class="req">*</span></label><textarea ${s.status!=='Draft'?'disabled':''}>${o.feedback?o.feedback.ret+'；'+o.feedback.voc+'；'+o.feedback.social:''}</textarea></div>`:''}
+          <div class="field"><label>改款说明（改哪里）<span class="req">*</span></label>
+            <textarea ${s.status!=='Draft'?'disabled':''}>${s.scenario==='neg'?(o.fix||''):s.scenario==='pos'?'领形改方领；后背加绑带设计；其余版型沿用基础款':'领形：垂领 cowl；面料：重磅缎面；长度：及地 maxi；开衩：侧高开衩'}</textarea>
+            <div class="sub">结构化维度：领 / 袖 / 背 / 长度 / 开衩 / 面料 / 颜色</div>
+          </div>
+          <div class="grid2">
+            <div class="field"><label>面料 <span class="req">*</span></label><input type="text" value="重磅哑光缎 · pp_id FAB-2201" ${s.status!=='Draft'?'disabled':''}></div>
+            <div class="field"><label>廓形 <span class="req">*</span></label><input type="text" value="${s.scenario==='neg'?'抹胸鱼尾':'A 字 / 直身'}" ${s.status!=='Draft'?'disabled':''}></div>
+          </div>
+          <div class="grid2">
+            <div class="field"><label>销售意向 <span class="req">*</span></label>
+              <select ${s.status!=='Draft'?'disabled':''} onchange="curScheme.intent=this.value">
+                <option ${s.intent==='现货'?'selected':''}>现货</option>
+                <option ${s.intent==='MTO'?'selected':''}>MTO</option>
+              </select>
+              <div class="sub">人可改 AI 建议；AI verdict=mto 时联动为 MTO</div>
+            </div>
+            <div class="field"><label>目标市场 <span class="req">*</span></label>
+              <input type="text" value="${o.mk?Object.keys(o.mk).map(m=>MKT[m]+' '+m).join(' / '):'美国 US'}" ${s.status!=='Draft'?'disabled':''}>
+              <div class="sub">默认继承信号来源市场；价带与销量评估按市场独立口径</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head"><h3>② 成本与定价（BOM 链）</h3><span class="hint">优先级 bom → similar_bom → rule_estimate → manual</span></div>
+        <div class="card-body">
+          <table class="tbl">
+            <tr><th>cost_source</th><th>adopted_cost</th><th>建议售价（×5）</th><th>竞品价带（SPU P25–P75）</th><th>band_valid</th><th>结论</th></tr>
+            <tr>
+              <td><span class="tag ${s.cost.source==='bom'?'green':s.cost.source==='similar_bom'?'blue':'gold'}">${s.cost.source}</span></td>
+              <td><b>${s.cost.adopted||'待解析'}</b> ${s.cost.currency}</td>
+              <td><b>${s.cost.suggest||'—'}</b></td>
+              <td>${s.cost.band}</td>
+              <td>${s.cost.band_valid?'<span class="tag green">true</span>':'<span class="tag red">false（SPU<5 或币种未对齐）</span>'}</td>
+              <td>${s.gates.no_cost_advantage?'<span class="tag red">无成本优势</span>':s.cost.band_valid?'<span class="tag green">价带内有优势</span>':'<span class="tag gray">不判优势</span>'}</td>
+            </tr>
+          </table>
+          <div style="margin-top:10px">
+            <button class="btn sm" onclick="resolveCost()">↻ 成本解析（POST /cost/resolve）</button>
+            <span class="muted" style="font-size:11px;margin-left:8px">BOM APPLY_PRICE 唯一有效行才自动 adopted；stale >180 天需 at_ops_lead 确认</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head"><h3>③ 可生产性（库存信息）</h3></div>
+        <div class="card-body">
+          <div class="gate"><span class="dot ${{ok:'ok',risky:'warn',unknown:'unknown'}[s.gates.producibility]}"></span>producibility<span class="val">${s.gates.producibility}</span></div>
+          <div class="gate"><span class="dot ${s.gates.producibility==='unknown'?'unknown':'ok'}"></span>similar_stock_depth（peers 可用库存）<span class="val">${s.gates.producibility==='unknown'?'库存源未接':s.gates.producibility==='risky'?'低于 AT P25':'1,240 件 · 充足'}</span></div>
+          <div class="gate"><span class="dot ${s.gates.producibility==='unknown'?'unknown':s.gates.low_inventory_risk?'bad':'ok'}"></span>fabric_stock_ok（主料 pp_id 库存）<span class="val">${s.gates.producibility==='unknown'?'unknown':s.gates.low_inventory_risk?'主料无库存':'FAB-2201 有库存 ✓'}</span></div>
+          ${s.gates.producibility==='unknown'?'<div class="notice warn" style="margin-top:10px;margin-bottom:0">库存数据未接，需人工判断——不阻断建稿，AI 与审批将高亮「需人工确认可生产性」。</div>':''}
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head"><h3>Gates 快照（事实，不算分）</h3></div>
+        <div class="card-body">${gateHtml(s.gates)}
+          <hr class="sep">
+          <div style="font-size:11px" class="muted">信号佐证：</div>
+          ${o.sig?sigRow(o.sig):''}
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head"><h3>AI 建议</h3><span class="hint">参考 amazon-product-manager-skill 决策框架</span></div>
+        <div class="card-body" id="ai-panel">${aiPanelHtml(s)}</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>流转</h3></div>
+        <div class="card-body">
+          <div class="timeline">
+            ${stFlow.map((st,i)=>`<div class="tl-item ${i<stIdx?'done':i===stIdx?'now':''}"><b>${st}</b>${i===stIdx?'<span class="tag accent" style="margin-left:6px">当前</span>':''}<div class="tl-time">${i<stIdx?'已完成':i===stIdx?'进行中':''}</div></div>`).join('')}
+          </div>
+          <hr class="sep">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            ${s.status==='Draft'?`<button class="btn primary" onclick="runAI()">提交 AI 建议</button><button class="btn" onclick="toast('草稿已保存（PUT /at/schemes → bump scheme_version）')">保存草稿</button>`:''}
+            ${s.status==='AI_Done'?`<button class="btn primary" onclick="submitApproval()">提交负责人审批</button><button class="btn" onclick="curScheme.status='Draft';curScheme.ai=null;toast('已退回编辑，旧 AI 建议随 scheme_version 变更废止');renderEditor()">继续编辑（废止建议）</button>`:''}
+            ${s.status==='Pending_Approval'?`<span class="muted" style="font-size:12px">等待 AT 品类负责人审批…（可在「审批队列」页切换负责人视角操作）</span>`:''}
+            ${s.status==='Synced_To_Selection'?`<span class="tag green">已写入选款 ${s.goods?'· goods_id '+s.goods:''}</span>`:''}
+            ${s.status==='Rejected'?`<button class="btn primary" onclick="curScheme.status='Draft';toast('已回到草稿，修改后可重新提交');renderEditor()">按驳回意见修改</button>`:''}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function aiPanelHtml(s){
+  if(!s.ai) return `<p class="muted" style="font-size:12px">尚未生成。提交后输入 = 方案内容 + gates 快照 + scheme_version（内容哈希）。<br><br>输出四档：<span class="tag green">建议推</span> <span class="tag gold">谨慎推</span> <span class="tag blue">建议 MTO</span> <span class="tag red">不建议推</span><br><br>允许集由 R1–R7 规则限定，LLM 不得越界；risk_ack_code 仅运营可填。</p>`;
+  const v=s.ai.verdict, L=VERDICT[v];
+  const why={
+    recommend:['竞品上新即进列表前列（list_rank 靠前，sales_proxy 口径）','AD 在投时长 / EDM 主推位表明竞品自身在为该款倾斜流量','价带内有成本优势（suggest ≤ P75）','库存可生产性 ok，无二次工艺阻塞'],
+    cautious:['存在单一风险项，允许 recommend 但需运营填 risk_ack_code','建议先小批量测款验证'],
+    mto:['库存/负反馈风险存在，MTO 可规避备货风险','修复型改款建议以 MTO 验证修复效果后再转现货'],
+    reject:['多重风险叠加（详见 gates），允许集内无 recommend']
+  }[v];
+  return `
+  <div class="ai-verdict ${v}">
+    <div class="v-label">AI Decision · 规则 ${s.ai.rule} 允许集内</div>
+    <h4>${L[0]}</h4>
+    <div style="font-size:11px" class="mono">scheme_version=${s.ver} · 提示词 v3.2 · 金样例校验 ✓</div>
+  </div>
+  <div class="ai-sec"><h5>为什么（引用 Gates）</h5><ul>${why.map(w=>'<li>'+w+'</li>').join('')}</ul></div>
+  ${s.ai.evidence_gap?`<div class="ai-sec"><h5>证据缺口（缺数坦白）</h5><ul><li>${s.ai.evidence_gap}</li><li>审批时将高亮，不得伪装为无风险</li></ul></div>`:''}
+  <div class="ai-sec"><h5>建议动作</h5><ul><li>${v==='mto'?'以 MTO 形式进选款，首单控制在最小起订量':v==='reject'?'退回观察，等待下一轮爬取批次新证据':'按建议售价进现货选款，首批 2 色'}</li></ul></div>
+  <div class="ai-sec"><h5>何种新证据会改变结论</h5><ul><li>${s.ai.evidence_gap?'内部相似款 peers 补齐后 internal_signal 变为 poor':'竞品下一批次 rank 大幅下滑，或社媒出现翻车证据'}</li><li>竞品停投广告 / 邮件不再主推（热度信号衰减）</li></ul></div>
+  <p class="muted" style="font-size:11px">※ 软闸门：运营可 override 后交审批；scheme_version 变更即废止本建议。</p>`;
+}
+
+function resolveCost(){
+  const s=curScheme;
+  if(s.cost.adopted){toast('成本已解析：cost_source='+s.cost.source+'（cardinality=1 · valid）');return;}
+  s.cost={source:"similar_bom", adopted:"$18.4", currency:"USD", suggest:"$92", band:"P25 $72 – P75 $96", band_valid:true};
+  s.gates.no_cost_advantage=false;
+  toast('成本解析完成：similar_bom 命中 · 建议售价 = adopted_cost × 5');
+  renderEditor();
+}
+
+function runAI(){
+  const s=curScheme;
+  s.status='AI_Reviewing';
+  renderEditor();
+  toast('AI 分析中…（输入：方案 + gates + scheme_version）');
+  setTimeout(()=>{
+    const g=s.gates;
+    let verdict,rule;
+    const risky = g.producibility==='risky'||g.low_inventory_risk;
+    if(g.high_voc_risk&&g.internal_signal==='poor'){verdict=risky?'mto':'cautious';rule='R1'+(risky?'+R3':'');}
+    else if(g.no_cost_advantage&&g.internal_signal==='poor'){verdict='cautious';rule='R2';}
+    else if(risky){verdict='mto';rule='R3';}
+    else if(g.high_voc_risk&&g.no_cost_advantage){verdict='reject';rule='R4';}
+    else if(g.internal_signal==='unknown'||g.producibility==='unknown'){verdict='recommend';rule='R6';}
+    else {verdict='recommend';rule='R7';}
+    s.ai={verdict,rule,evidence_gap:(g.internal_signal==='unknown'?'internal_signal=unknown（无三维同款 peers）':g.producibility==='unknown'?'producibility=unknown（库存源未接）':null)};
+    if(verdict==='mto')s.intent='MTO';
+    s.status='AI_Done';
+    renderEditor();
+    toast('AI 建议已生成：'+VERDICT[verdict][0]+'（允许集规则 '+rule+'）');
+  },1400);
+}
+function submitApproval(){
+  curScheme.status='Pending_Approval';
+  renderEditor();renderSchemes();
+  toast('已提交审批，进入负责人队列');
+}
+
+/* ================================================================
+   审批队列
+================================================================ */
+function renderApproval(){
+  const list=SCHEMES.filter(s=>s.status==='Pending_Approval');
+  document.getElementById('nav-appr-cnt').textContent=list.length;
+  let h='';
+  if(!list.length)h='<div class="card"><div class="card-body" style="text-align:center;padding:40px" ><p class="muted">当前无待审方案。可到「选品方案」把 AI_Done 的方案提交审批。</p></div></div>';
+  list.forEach(s=>{
+    const o=OPPS.find(x=>x.id===s.opp)||{};
+    h+=`<div class="card" style="margin-bottom:16px">
+      <div class="card-head"><h3>${s.id} · ${s.title}</h3>
+        <span class="scenario ${SC_LABEL[s.scenario][1]}">${SC_LABEL[s.scenario][0]}</span>
+        <span style="margin-left:auto" class="mono">提交人 ${s.owner} · scheme_version=${s.ver}</span>
+      </div>
+      <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px">
+        <div>
+          <h5 style="font-size:11px;letter-spacing:1px;color:var(--ink3);margin-bottom:8px">证据区 · GATES</h5>
+          ${gateHtml(s.gates)}
+        </div>
+        <div>
+          <h5 style="font-size:11px;letter-spacing:1px;color:var(--ink3);margin-bottom:8px">AI 建议 & 成本</h5>
+          <div class="ai-verdict ${s.ai.verdict}" style="padding:10px 14px;margin-bottom:10px"><div class="v-label">AI Decision</div><h4 style="font-size:15px">${VERDICT[s.ai.verdict][0]}</h4></div>
+          <div style="font-size:12px;line-height:2">
+            成本 <b>${s.cost.adopted}</b>（${s.cost.source}）→ 建议价 <b>${s.cost.suggest}</b><br>
+            价带 ${s.cost.band} ${s.cost.band_valid?'<span class="tag green">band_valid</span>':''}
+          </div>
+          ${s.ai.evidence_gap?`<div class="notice warn" style="margin-top:8px;margin-bottom:0;padding:8px 10px;font-size:11.5px">⚠ 证据缺口：${s.ai.evidence_gap}</div>`:''}
+        </div>
+        <div>
+          <h5 style="font-size:11px;letter-spacing:1px;color:var(--ink3);margin-bottom:8px">信号佐证 & 冲突</h5>
+          ${o.sig?sigRow(o.sig):''}
+          <div style="font-size:12px;margin-top:10px;line-height:1.9" class="muted">
+            雷达：list_rank #${o.list_rank||'—'}（sales_proxy）<br>
+            ${o.sig&&o.sig.ads&&o.sig.ads.on?'广告：'+o.sig.ads.note+'<br>':''}
+            ${o.sig&&o.sig.email&&o.sig.email.on?'邮件：'+o.sig.email.note+'<br>':''}
+            雷款冲突检测：<span class="tag green">无冲突</span>
+          </div>
+          <hr class="sep">
+          <div style="display:flex;gap:8px">
+            <button class="btn primary" onclick="approve('${s.id}')">✓ 通过并写入选款</button>
+            <button class="btn danger" onclick="rejectScheme('${s.id}')">驳回</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('approval-content').innerHTML=h;
+}
+function approve(id){
+  const s=SCHEMES.find(x=>x.id===id);
+  s.status='Sync_Pending';
+  toast('审批通过：同事务写入审批事件 + outbox，状态 → Sync_Pending');
+  renderApproval();renderSchemes();
+  setTimeout(()=>{
+    s.status='Synced_To_Selection'; s.synced='07-28 '+new Date().toTimeString().slice(0,5); s.goods='AZ-P-'+(88000+Math.floor(Math.random()*999));
+    toast('同步成功 → Synced_To_Selection · 回执已生成');
+    renderSchemes();renderReceipt();
+    if(document.getElementById('page-approval').classList.contains('active'))renderApproval();
+  },1800);
+}
+function rejectScheme(id){
+  openModal(`<h3>驳回原因（必填，服务 KR3 回流）</h3>
+    <div class="field"><label>原因分类</label>
+      <select id="rej-type"><option>价格无优势</option><option>疑似雷款/舆情风险</option><option>无生产能力</option><option>与在售款冲突</option><option>证据不足</option></select></div>
+    <div class="field"><label>详细说明</label><textarea id="rej-note" placeholder="将回流用于优化提示词/规则…"></textarea></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn danger" onclick="doReject('${id}')">确认驳回</button>
+    </div>`);
+}
+function doReject(id){
+  const s=SCHEMES.find(x=>x.id===id);
+  s.status='Rejected';
+  closeModal();
+  toast('已驳回 → Rejected，原因已记录并回流；运营可修改后重提');
+  renderApproval();renderSchemes();
+}
+
+/* ================================================================
+   回执
+================================================================ */
+function renderReceipt(){
+  const synced=SCHEMES.filter(s=>['Synced_To_Selection','Sync_Pending','Sync_Failed'].includes(s.status));
+  let h=`<tr><th>方案</th><th>场景</th><th>generation_source</th><th>同步状态</th><th>goods_id 回写</th><th>ai_verdict / override</th><th>GMV 归因</th></tr>`;
+  synced.forEach(s=>{
+    h+=`<tr>
+      <td class="mono">${s.id}<br><span class="muted">${s.title}</span></td>
+      <td><span class="scenario ${SC_LABEL[s.scenario][1]}">${SC_LABEL[s.scenario][0]}</span></td>
+      <td><span class="tag violet mono">system_hub_at</span></td>
+      <td><span class="status-badge st-${s.status}">${s.status}</span>${s.synced?'<br><span class="muted" style="font-size:10.5px">'+s.synced+'</span>':''}</td>
+      <td class="mono">${s.goods||'—'}</td>
+      <td>${s.ai?VERDICT[s.ai.verdict][0]:'—'} / <span class="muted">override=false</span></td>
+      <td class="muted" style="font-size:11.5px">上架后关联 30/60d GMV（BI 报表）</td>
+    </tr>`;
+  });
+  h+=`<tr>
+    <td class="mono">SCH-2026-0081<br><span class="muted">跟款：Halter 亮片礼服（历史示例）</span></td>
+    <td><span class="scenario sc-new">纯新款</span></td>
+    <td><span class="tag violet mono">system_hub_at</span></td>
+    <td><span class="status-badge st-Sync_Failed">Sync_Failed</span><br><span class="muted" style="font-size:10.5px">重试 3/5 · 选款接口超时</span></td>
+    <td class="mono">—</td><td>建议推 / <span class="muted">override=false</span></td>
+    <td><button class="btn sm" onclick="toast('POST /at/sync/retry 已触发（Demo）')">↻ 手动重试</button></td>
+  </tr>`;
+  document.getElementById('receipt-table').innerHTML=h;
+}
+
+/* ================================================================
+   初始化
+================================================================ */
+renderMonitor();
+renderPool();
+renderSchemes();
+renderReceipt();
+</script>
+</body>
+</html>
